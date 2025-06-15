@@ -1,123 +1,50 @@
 <!DOCTYPE html>
-<html lang="en" >
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>HomeTasks — Minimal & Beautiful</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HomeTasks — Household Task Manager</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
-  <style>
-    body {
-      font-family: 'Inter', sans-serif;
-    }
-    /* Icon buttons - minimal stroke-only with no fill, uniform stroke */
-    button.icon-btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 4px;
-      cursor: pointer;
-      border-radius: 6px;
-      color: #4B5563; /* Gray-600 */
-      transition: color 0.2s ease;
-    }
-    button.icon-btn:hover {
-      color: #2563EB; /* Indigo-600 */
-      background-color: #EFF6FF; /* Indigo-100 subtle bg */
-    }
-    button.icon-btn.delete:hover {
-      color: #DC2626; /* Red-600 */
-      background-color: #FEE2E2; /* Red-100 */
-    }
-    input[type="checkbox"].complete-checkbox {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 20px;
-      height: 20px;
-      border: 2px solid #6B7280; /* Gray-500 */
-      border-radius: 9999px;
-      cursor: pointer;
-      position: relative;
-      transition: border-color 0.2s ease, background-color 0.2s ease;
-    }
-    input[type="checkbox"].complete-checkbox:checked {
-      background-color: #2563EB; /* Indigo-600 */
-      border-color: #2563EB;
-    }
-    input[type="checkbox"].complete-checkbox:checked::after {
-      content: '';
-      position: absolute;
-      top: 4px;
-      left: 7px;
-      width: 5px;
-      height: 10px;
-      border: solid white;
-      border-width: 0 2px 2px 0;
-      transform: rotate(45deg);
-    }
-  </style>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <style> body { font-family: 'Inter', sans-serif; } </style>
 </head>
-<body class="bg-gray-50 text-gray-800">
-  <div class="min-h-screen flex flex-col items-center p-8">
+<body class="bg-gray-100 text-gray-800">
+  <div class="min-h-screen flex flex-col items-center p-6">
     <!-- Header -->
-    <header class="w-full max-w-3xl mb-12 text-center">
-      <h1 class="text-5xl font-extrabold text-gray-900 tracking-tight">🏠 HomeTasks</h1>
-      <p class="text-lg text-gray-500 mt-1">Minimal & beautiful household task manager.</p>
+    <header class="w-full max-w-3xl mb-10 text-center">
+      <h1 class="text-4xl font-semibold text-gray-900">🏠 HomeTasks</h1>
+      <p class="text-lg text-gray-600 mt-1">Simple task manager for your home.</p>
     </header>
 
     <!-- Task Input -->
-    <section class="w-full max-w-3xl bg-white rounded-3xl p-6 shadow-lg mb-10">
-      <div class="flex flex-col gap-5">
-        <input
-          type="text"
-          id="taskTitleInput"
-          placeholder="Task title..."
-          class="text-lg font-semibold border border-gray-300 rounded-xl px-5 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          autocomplete="off"
-        />
-        <input
-          type="text"
-          id="taskDescInput"
-          placeholder="Task description (optional)..."
-          class="text-sm text-gray-600 border border-gray-300 rounded-xl px-5 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          autocomplete="off"
-        />
-        <button
-          id="addTask"
-          class="self-start bg-indigo-600 text-white font-semibold rounded-xl px-8 py-3 hover:bg-indigo-700 transition"
-        >
-          Add Task
-        </button>
+    <section class="w-full max-w-3xl bg-white shadow-xl rounded-2xl p-6 mb-8">
+      <div class="flex flex-col gap-4">
+        <input type="text" id="taskTitleInput" placeholder="Task title..." class="border border-gray-300 rounded-xl px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+        <input type="text" id="taskDescInput" placeholder="Task description..." class="border border-gray-300 rounded-xl px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+        <button id="addTask" class="self-start bg-indigo-600 text-white px-6 py-3 rounded-xl text-lg hover:bg-indigo-700 transition">Add</button>
       </div>
     </section>
 
-    <!-- Toggle Completed -->
-    <div class="mb-6">
-      <button
-        id="toggleCompleted"
-        class="text-indigo-600 font-medium hover:underline focus:outline-none"
-      >
-        View Completed Tasks
-      </button>
+    <!-- Buttons -->
+    <div class="mb-4">
+      <button id="toggleCompleted" class="text-indigo-600 hover:underline">View Completed Tasks</button>
     </div>
 
-    <!-- Task Lists -->
+    <!-- Task List -->
     <section class="w-full max-w-3xl">
-      <h2 class="text-2xl font-semibold mb-4 tracking-wide">Active Tasks</h2>
-      <ul id="taskList" class="space-y-5"></ul>
-
-      <section id="completedSection" class="hidden mt-12">
-        <h2 class="text-2xl font-semibold mb-4 tracking-wide">Completed Tasks</h2>
-        <ul id="completedList" class="space-y-5"></ul>
-      </section>
+      <h2 class="text-xl font-semibold mb-2">Active Tasks</h2>
+      <ul id="taskList" class="space-y-4"></ul>
+      <div id="completedSection" class="hidden mt-10">
+        <h2 class="text-xl font-semibold mb-2">Completed Tasks</h2>
+        <ul id="completedList" class="space-y-4"></ul>
+      </div>
     </section>
 
     <!-- Footer -->
-    <footer class="mt-16 mb-4 text-center text-gray-400 text-sm select-none">
-      Built with ☕ and TailwindCSS — Crafted for clarity and beauty
-    </footer>
+    <footer class="mt-12 text-sm text-gray-400 text-center">Built with ☕ and TailwindCSS</footer>
   </div>
 
   <script>
@@ -143,6 +70,9 @@
 
     toggleCompleted.addEventListener('click', () => {
       completedSection.classList.toggle('hidden');
+      toggleCompleted.innerText = completedSection.classList.contains('hidden')
+        ? 'View Completed Tasks'
+        : 'Hide Completed Tasks';
     });
 
     addTaskBtn.addEventListener('click', async () => {
@@ -152,26 +82,13 @@
       await db.collection('tasks').add({
         title,
         description,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-        done: false,
-        completedAt: null
+        createdAt: new Date(),
+        done: false
       });
       taskTitleInput.value = '';
       taskDescInput.value = '';
       loadTasks();
     });
-
-    function formatDateTime(timestamp) {
-      if (!timestamp) return '';
-      const date = timestamp.toDate();
-      return date.toLocaleString(undefined, {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-    }
 
     async function loadTasks() {
       taskList.innerHTML = '';
@@ -182,118 +99,81 @@
       snapshot.forEach(doc => {
         const data = doc.data();
         const li = document.createElement('li');
-        li.className = 'flex justify-between items-center bg-white rounded-3xl p-5 shadow-sm';
+        li.className = 'flex justify-between items-center bg-white p-4 rounded-xl shadow-sm';
 
-        // Left side: Title & description
-        const leftDiv = document.createElement('div');
-        leftDiv.className = 'flex flex-col flex-grow';
+        const wrapper = document.createElement('div');
+        wrapper.className = 'flex-grow';
 
         const titleInput = document.createElement('input');
         titleInput.type = 'text';
         titleInput.value = data.title;
-        titleInput.className = 'text-lg font-semibold bg-transparent focus:outline-none';
+        titleInput.className = 'text-lg font-semibold w-full bg-transparent focus:outline-none';
         titleInput.readOnly = true;
-        titleInput.style.wordBreak = 'break-word';
 
         const descInput = document.createElement('input');
         descInput.type = 'text';
         descInput.value = data.description || '';
-        descInput.className = 'text-sm text-gray-500 mt-1 bg-transparent focus:outline-none';
+        descInput.className = 'text-sm text-gray-600 w-full bg-transparent focus:outline-none';
         descInput.readOnly = true;
-        descInput.style.wordBreak = 'break-word';
 
-        leftDiv.appendChild(titleInput);
-        if (data.description) leftDiv.appendChild(descInput);
-
-        // Timestamp below title/desc
         const timeInfo = document.createElement('p');
-        timeInfo.className = 'text-xs text-gray-400 mt-2 select-none';
-        if (data.done) {
-          timeInfo.textContent = `Completed: ${formatDateTime(data.completedAt)}`;
-        } else {
-          timeInfo.textContent = `Created: ${formatDateTime(data.createdAt)}`;
+        timeInfo.className = 'text-sm text-gray-400 mt-1';
+        if (data.done && data.completedAt) {
+          const date = data.completedAt.toDate().toLocaleString();
+          timeInfo.innerText = `Completed on ${date}`;
+        } else if (data.createdAt) {
+          const created = data.createdAt.toDate().toLocaleString();
+          timeInfo.innerText = `Created on ${created}`;
         }
-        leftDiv.appendChild(timeInfo);
 
-        // Right side: controls
-        const rightDiv = document.createElement('div');
-        rightDiv.className = 'flex items-center space-x-4';
+        wrapper.append(titleInput, descInput, timeInfo);
 
-        // Edit button (minimal pencil icon)
+        const rightControls = document.createElement('div');
+        rightControls.className = 'flex items-center space-x-3';
+
         const editBtn = document.createElement('button');
-        editBtn.className = 'icon-btn';
-        editBtn.title = 'Edit Task';
-        editBtn.innerHTML = `
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" 
-          stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" class="w-5 h-5">
-            <path d="M12 20h9" />
-            <path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4 12.5-12.5z"/>
-          </svg>
-        `;
-
+        editBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-blue-600 hover:text-blue-800" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536M9 13h3l8-8a1 1 0 00-1.414-1.414l-8 8v3z" /></svg>';
         editBtn.addEventListener('click', () => {
           titleInput.readOnly = false;
           descInput.readOnly = false;
           titleInput.focus();
         });
-
-        titleInput.addEventListener('blur', async () => {
+        titleInput.addEventListener('blur', () => {
           titleInput.readOnly = true;
-          await db.collection('tasks').doc(doc.id).update({ title: titleInput.value.trim() });
+          db.collection('tasks').doc(doc.id).update({ title: titleInput.value });
         });
-
-        descInput.addEventListener('blur', async () => {
+        descInput.addEventListener('blur', () => {
           descInput.readOnly = true;
-          await db.collection('tasks').doc(doc.id).update({ description: descInput.value.trim() });
+          db.collection('tasks').doc(doc.id).update({ description: descInput.value });
         });
 
-        // Delete button (minimal trash icon)
         const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'icon-btn delete';
-        deleteBtn.title = 'Delete Task';
-        deleteBtn.innerHTML = `
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2" 
-          stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" class="w-5 h-5">
-            <polyline points="3 6 5 6 21 6"></polyline>
-            <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/>
-            <path d="M10 11v6"/>
-            <path d="M14 11v6"/>
-            <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/>
-          </svg>
-        `;
-
+        deleteBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500 hover:text-red-700" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>';
         deleteBtn.addEventListener('click', async () => {
           await db.collection('tasks').doc(doc.id).delete();
           loadTasks();
         });
 
         if (!data.done) {
-          // Complete checkbox (custom styled circle with checkmark)
           const checkbox = document.createElement('input');
           checkbox.type = 'checkbox';
-          checkbox.checked = false;
-          checkbox.title = 'Mark as Complete';
-          checkbox.className = 'complete-checkbox';
+          checkbox.className = 'h-5 w-5 cursor-pointer hover:ring-2 hover:ring-indigo-500 rounded';
           checkbox.addEventListener('change', async () => {
             if (checkbox.checked) {
               await db.collection('tasks').doc(doc.id).update({
                 done: true,
-                completedAt: firebase.firestore.FieldValue.serverTimestamp()
+                completedAt: new Date()
               });
               loadTasks();
             }
           });
-          rightDiv.append(editBtn, checkbox, deleteBtn);
+          rightControls.append(checkbox, editBtn, deleteBtn);
         } else {
-          rightDiv.append(editBtn, deleteBtn);
+          rightControls.append(editBtn, deleteBtn);
         }
 
-        li.append(leftDiv, rightDiv);
-        if (data.done) {
-          completedList.appendChild(li);
-        } else {
-          taskList.appendChild(li);
-        }
+        li.append(wrapper, rightControls);
+        data.done ? completedList.appendChild(li) : taskList.appendChild(li);
       });
     }
 
