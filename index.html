@@ -1,141 +1,187 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Homeflow — Household Task Manager</title>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6; /* bg-gray-100 */
-            color: #374151; /* text-gray-800 */
-            padding: 1.5rem; /* p-6 */
-        }
-        /* Basic hidden class */
-        .hidden { display: none; }
-        .active { display: block; } /* For sections that are active */
-
-        /* Optional: simple fade in for sections */
-        .section-transition {
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-        }
-        .section-transition.active {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HomeTasks — Household Task Manager</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <style> 
+    body { font-family: 'Inter', sans-serif; } 
+    /* Custom checkbox styling */
+    input[type="checkbox"] {
+      accent-color: #4f46e5; /* Indigo-600 */
+      width: 1.5rem;
+      height: 1.5rem;
+      cursor: pointer;
+    }
+  </style>
 </head>
-<body>
-    <div class="max-w-3xl mx-auto">
-        <header class="text-center mb-10">
-            <h1 class="text-4xl font-semibold text-gray-900">🏠 Homeflow</h1>
-            <p class="text-lg text-gray-600 mt-2">The simple task manager for your home.</p>
-        </header>
+<body class="bg-gray-100 text-gray-800">
+  <div class="min-h-screen flex flex-col items-center p-6">
+    <!-- Header -->
+    <header class="w-full max-w-3xl mb-10">
+      <h1 class="text-4xl font-semibold text-gray-900">🏠 HomeTasks</h1>
+      <p class="text-lg text-gray-600 mt-1">Simple task manager for your home.</p>
+    </header>
 
-        <main>
-            <div id="home-page-options" class="bg-white shadow-xl rounded-2xl p-6 mb-8 text-center section-transition active">
-                <h2 class="text-3xl font-bold text-gray-800 mb-4">Welcome Home!</h2>
-                <div class="space-y-4">
-                    <button id="createTaskBtn" class="bg-indigo-600 text-white px-8 py-4 rounded-xl text-xl hover:bg-indigo-700 transition w-full">Create New Task</button>
-                    <button id="viewTasksBtn" class="bg-blue-500 text-white px-8 py-4 rounded-xl text-xl hover:bg-blue-600 transition w-full">View Current Tasks</button>
-                    <button id="viewCompletedTasksBtn" class="bg-green-500 text-white px-8 py-4 rounded-xl text-xl hover:bg-green-600 transition w-full">View Completed Tasks</button>
-                </div>
-            </div>
+    <!-- Task Input -->
+    <section class="w-full max-w-3xl bg-white shadow-xl rounded-2xl p-6 mb-8">
+      <div class="flex flex-col gap-4">
+        <input type="text" id="taskTitleInput" placeholder="Task title..." class="border border-gray-300 rounded-xl px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+        <input type="text" id="taskDescInput" placeholder="Task description..." class="border border-gray-300 rounded-xl px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+        <button id="addTask" class="self-start bg-indigo-600 text-white px-6 py-3 rounded-xl text-lg hover:bg-indigo-700 transition">Add</button>
+      </div>
+    </section>
 
-            <section id="add-task-section" class="bg-white shadow-xl rounded-2xl p-6 mb-8 section-transition hidden">
-                <h2 class="text-2xl font-semibold text-gray-900 mb-6 border-b pb-4">Add New Task</h2>
-                <form id="addTaskForm" class="space-y-5">
-                    <div>
-                        <label for="taskTitle" class="block text-gray-700 text-sm font-bold mb-2">Task Title:</label>
-                        <input
-                            type="text"
-                            id="taskTitle"
-                            required
-                            class="w-full border border-gray-300 rounded-xl px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                            placeholder="e.g., Clean the garage"
-                        />
-                    </div>
-                    <div>
-                        <label for="taskDescription" class="block text-gray-700 text-sm font-bold mb-2">Description (optional):</label>
-                        <textarea
-                            id="taskDescription"
-                            rows="4"
-                            class="w-full border border-gray-300 rounded-xl px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-y"
-                            placeholder="Details about the task..."
-                        ></textarea>
-                    </div>
-                    <button type="submit" class="bg-indigo-600 text-white px-6 py-3 rounded-xl text-lg hover:bg-indigo-700 transition w-full">Add Task</button>
-                </form>
-                <button id="backToHomeFromCreate" class="mt-8 bg-gray-500 text-white px-5 py-2 rounded-lg text-base hover:bg-gray-600 transition block mx-auto">Back to Home</button>
-            </section>
-
-            <section id="tasks-list" class="section-transition hidden">
-                <h2 class="text-2xl font-semibold text-gray-900 mb-6 border-b pb-4">Current Tasks</h2>
-                <ul class="space-y-4" id="incomplete-tasks-ul">
-                    </ul>
-                <p id="no-incomplete-tasks-message" class="text-center text-gray-500 mt-8 hidden">You have no outstanding tasks. Great job!</p>
-                <button id="backToHomeFromView" class="mt-8 bg-gray-500 text-white px-5 py-2 rounded-lg text-base hover:bg-gray-600 transition block mx-auto">Back to Home</button>
-            </section>
-
-            <section id="completed-tasks-list" class="section-transition hidden">
-                <h2 class="text-2xl font-semibold text-gray-900 mb-6 border-b pb-4">Completed Tasks</h2>
-                <ul class="space-y-4" id="complete-tasks-ul">
-                    </ul>
-                <p id="no-completed-tasks-message" class="text-center text-gray-500 mt-8 hidden">No tasks have been completed yet. Get to work!</p>
-                <button id="backToHomeFromCompleted" class="mt-8 bg-gray-500 text-white px-5 py-2 rounded-lg text-base hover:bg-gray-600 transition block mx-auto">Back to Home</button>
-            </section>
-        </main>
-
-        <footer class="mt-12 text-sm text-gray-400 text-center">
-            Built with ☕ and TailwindCSS
-        </footer>
+    <!-- Buttons -->
+    <div class="mb-4">
+      <button id="toggleCompleted" class="text-indigo-600 hover:underline">View Completed Tasks</button>
     </div>
 
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <!-- Task List -->
+    <section class="w-full max-w-3xl">
+      <h2 class="text-xl font-semibold mb-2">Active Tasks</h2>
+      <ul id="taskList" class="space-y-4"></ul>
+      <div id="completedSection" class="hidden mt-10">
+        <h2 class="text-xl font-semibold mb-2">Completed Tasks</h2>
+        <ul id="completedList" class="space-y-4"></ul>
+      </div>
+    </section>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
+    <!-- Footer -->
+    <footer class="mt-12 text-sm text-gray-400">Built with ☕ and TailwindCSS</footer>
+  </div>
 
-            // --- 1. Firebase Configuration ---
-            // IMPORTANT: Replace with your actual Firebase project configuration
-            const firebaseConfig = {
-                apiKey: "YOUR_API_KEY", // Replace with your actual API Key
-                authDomain: "YOUR_AUTH_DOMAIN",
-                projectId: "YOUR_PROJECT_ID",
-                storageBucket: "YOUR_STORAGE_BUCKET",
-                messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-                appId: "YOUR_APP_ID",
-                measurementId: "YOUR_MEASUREMENT_ID"
-            };
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyAddn3_6GWdQ8oeQl2-H1MfKyHrwUVh70Y",
+      authDomain: "joesquicknotes.firebaseapp.com",
+      projectId: "joesquicknotes",
+      storageBucket: "joesquicknotes.firebasestorage.app",
+      messagingSenderId: "903482150331",
+      appId: "1:903482150331:web:609caf78b6fd54e094489e",
+      measurementId: "G-J1K97GXPFR"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
 
-            // Initialize Firebase
-            firebase.initializeApp(firebaseConfig);
-            const db = firebase.firestore();
-            const tasksCollection = db.collection('tasks');
+    const taskTitleInput = document.getElementById('taskTitleInput');
+    const taskDescInput = document.getElementById('taskDescInput');
+    const addTaskBtn = document.getElementById('addTask');
+    const taskList = document.getElementById('taskList');
+    const completedList = document.getElementById('completedList');
+    const completedSection = document.getElementById('completedSection');
+    const toggleCompleted = document.getElementById('toggleCompleted');
 
-            let allTasksData = []; // This will hold all tasks, complete and incomplete
+    toggleCompleted.addEventListener('click', () => {
+      completedSection.classList.toggle('hidden');
+    });
 
-            // --- 2. Global Variables & DOM Elements ---
-            const homePageOptions = document.getElementById('home-page-options');
-            const createTaskBtn = document.getElementById('createTaskBtn');
-            const viewTasksBtn = document.getElementById('viewTasksBtn');
-            const viewCompletedTasksBtn = document.getElementById('viewCompletedTasksBtn');
+    addTaskBtn.addEventListener('click', async () => {
+      const title = taskTitleInput.value.trim();
+      const description = taskDescInput.value.trim();
+      if (!title) return;
+      await db.collection('tasks').add({
+        title,
+        description,
+        createdAt: new Date(),
+        done: false
+      });
+      taskTitleInput.value = '';
+      taskDescInput.value = '';
+      loadTasks();
+    });
 
-            const addTaskSection = document.getElementById('add-task-section');
-            const addTaskForm = document.getElementById('addTaskForm');
-            const taskTitleInput = document.getElementById('taskTitle');
-            const taskDescriptionInput = document.getElementById('taskDescription');
+    async function loadTasks() {
+      taskList.innerHTML = '';
+      completedList.innerHTML = '';
 
-            const tasksListSection = document.getElementById('tasks-list');
-            const incompleteTasksUl = document.getElementById('incomplete-tasks-ul');
-            const noIncompleteTasksMessage = document.getElementById('no-incomplete-tasks-message');
+      const snapshot = await db.collection('tasks').orderBy('createdAt', 'desc').get();
 
-            const completedTasksListSection = document.getElementById('completed-tasks-list');
-            const completeTasksUl = document.getElementById('complete-tasks-ul');
-            const noCompletedTasksMessage = document.getElementById('no-completed-
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const li = document.createElement('li');
+        li.className = 'flex justify-between items-center bg-white p-4 rounded-xl shadow-sm';
+
+        const wrapper = document.createElement('div');
+        wrapper.className = 'flex-grow';
+
+        const titleInput = document.createElement('input');
+        titleInput.type = 'text';
+        titleInput.value = data.title;
+        titleInput.className = 'text-lg font-semibold w-full bg-transparent focus:outline-none';
+        titleInput.readOnly = true;
+
+        const descInput = document.createElement('input');
+        descInput.type = 'text';
+        descInput.value = data.description || '';
+        descInput.className = 'text-sm text-gray-600 w-full bg-transparent focus:outline-none';
+        descInput.readOnly = true;
+
+        const timeInfo = document.createElement('p');
+        timeInfo.className = 'text-sm text-gray-400 mt-1';
+        if (data.done) {
+          const date = data.completedAt?.toDate().toLocaleString() || '';
+          timeInfo.innerText = `Completed on ${date}`;
+        }
+
+        wrapper.append(titleInput, descInput, data.done ? timeInfo : '');
+
+        const rightControls = document.createElement('div');
+        rightControls.className = 'flex items-center space-x-4';
+
+        const editBtn = document.createElement('button');
+        editBtn.innerHTML = lucide.createIcon('Edit', { class: 'h-6 w-6 text-blue-600 hover:text-blue-800 cursor-pointer' }).outerHTML;
+        editBtn.addEventListener('click', () => {
+          titleInput.readOnly = false;
+          descInput.readOnly = false;
+          titleInput.focus();
+        });
+        titleInput.addEventListener('blur', () => {
+          titleInput.readOnly = true;
+          db.collection('tasks').doc(doc.id).update({ title: titleInput.value });
+        });
+        descInput.addEventListener('blur', () => {
+          descInput.readOnly = true;
+          db.collection('tasks').doc(doc.id).update({ description: descInput.value });
+        });
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.innerHTML = lucide.createIcon('Trash2', { class: 'h-6 w-6 text-red-500 hover:text-red-700 cursor-pointer' }).outerHTML;
+        deleteBtn.addEventListener('click', async () => {
+          await db.collection('tasks').doc(doc.id).delete();
+          loadTasks();
+        });
+
+        if (!data.done) {
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.checked = false;
+          checkbox.className = 'cursor-pointer';
+          checkbox.addEventListener('change', async () => {
+            if (checkbox.checked) {
+              await db.collection('tasks').doc(doc.id).update({
+                done: true,
+                completedAt: new Date()
+              });
+              loadTasks();
+            }
+          });
+          rightControls.append(editBtn, deleteBtn, checkbox);
+        } else {
+          rightControls.append(editBtn, deleteBtn);
+        }
+
+        li.append(wrapper, rightControls);
+        data.done ? completedList.appendChild(li) : taskList.appendChild(li);
+      });
+    }
+
+    loadTasks();
+  </script>
+</body>
+</html>
