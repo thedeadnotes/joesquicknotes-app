@@ -8,36 +8,16 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
     <style>
+        /* General Body and Container Styles */
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; /* More modern font stack */
             margin: 0;
-            background-color: #e0e0e0; /* Soft Gray */
-            color: #333; /* Dark text for contrast */
+            background-color: #f4f7f6; /* Lighter, subtle background */
+            color: #333;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
-        }
-
-        header {
-            background-color: #008080; /* Deep Teal */
-            color: white;
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        header h1 {
-            margin: 0;
-            font-size: 1.8em;
-            color: white; /* Ensure header title is white */
-        }
-
-        #user-display {
-            margin-right: 15px;
-            font-weight: bold;
-            font-size: 0.9em;
+            line-height: 1.6;
         }
 
         #main-app-content {
@@ -45,165 +25,286 @@
             padding: 20px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 25px; /* Slightly increased gap */
             max-width: 900px;
             margin: 20px auto;
             width: 100%;
             box-sizing: border-box;
         }
 
-        /* --- NEW STYLES FOR INTERACTIVE HOME PAGE --- */
+        /* Header Styles */
+        header {
+            background-color: #00796b; /* Darker Teal */
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* More pronounced shadow */
+            position: sticky; /* Make header sticky */
+            top: 0;
+            z-index: 1000; /* Ensure it stays on top */
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 2em; /* Slightly larger title */
+            color: white;
+            font-weight: 600; /* Bolder */
+        }
+
+        #user-display {
+            margin-right: 15px;
+            font-weight: normal; /* Less bold */
+            font-size: 0.95em;
+            opacity: 0.8; /* Softer text */
+        }
+
+        /* --- GUI IMPROVEMENTS START HERE --- */
+
+        /* Interactive Home Page Options */
         #home-page-options {
+            background-color: #ffffff; /* White background for the options box */
+            padding: 60px 30px; /* More padding */
+            border-radius: 12px; /* Softer corners */
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1); /* Enhanced shadow */
+            text-align: center;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 20px;
-            padding: 50px 20px;
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
-            text-align: center;
+            gap: 30px; /* More space between buttons */
+            min-height: 250px; /* Minimum height for better visual balance */
+            justify-content: center;
+        }
+
+        #home-page-options h2 {
+            font-size: 2.2em; /* Larger welcome message */
+            color: #00796b; /* Matching header teal */
+            margin-bottom: 20px;
         }
 
         #home-page-options button {
-            width: 250px;
-            padding: 15px 25px;
-            font-size: 1.2em;
-            background-color: #008080; /* Deep Teal */
+            width: 280px; /* Wider buttons */
+            padding: 18px 25px; /* More padding for a "fuller" button */
+            font-size: 1.3em; /* Larger text */
+            background-color: #00796b; /* Darker Teal */
             color: white;
             border: none;
-            border-radius: 5px;
+            border-radius: 8px; /* Slightly more rounded */
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease; /* Added transform and box-shadow for hover */
+            font-weight: 600;
+            letter-spacing: 0.5px;
         }
 
         #home-page-options button:hover {
-            background-color: #005050; /* Darker Teal */
+            background-color: #005a4e; /* Even darker teal */
+            transform: translateY(-3px); /* Lift effect on hover */
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Deeper shadow on hover */
         }
 
         /* Initially hide these sections */
         #add-note-section, #notes-list {
             display: none;
+            opacity: 0; /* For fade-in effect */
+            transform: translateY(20px); /* For slide-up effect */
+            transition: opacity 0.5s ease-out, transform 0.5s ease-out; /* Smooth transition */
         }
-        /* --- END NEW STYLES --- */
 
+        /* Styles for when sections are active (toggled by JS) */
+        #add-note-section.active, #notes-list.active {
+            opacity: 1;
+            transform: translateY(0);
+            display: block; /* For form */
+        }
+        #notes-list.active {
+            display: grid; /* Maintain grid for notes list when active */
+        }
+
+        /* Add Note Section (Form) */
         #add-note-section {
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            background-color: #ffffff;
+            padding: 30px; /* Increased padding */
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
 
         #add-note-section h2 {
             margin-top: 0;
-            color: #008080; /* Deep Teal */
+            color: #00796b;
             border-bottom: 1px solid #eee;
-            padding-bottom: 10px;
-            margin-bottom: 15px;
+            padding-bottom: 15px;
+            margin-bottom: 25px; /* More space below heading */
+            font-size: 1.8em;
+            font-weight: 600;
         }
 
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 20px; /* More space between form groups */
         }
 
         .form-group label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 8px; /* More space between label and input */
             font-weight: bold;
+            color: #555;
+            font-size: 1.05em;
         }
 
         .form-group input[type="text"],
         .form-group textarea {
-            width: calc(100% - 20px);
-            padding: 10px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 1em;
+            width: calc(100% - 24px); /* Account for padding */
+            padding: 12px; /* More padding inside inputs */
+            border: 1px solid #ccc; /* Softer border */
+            border-radius: 6px;
+            font-size: 1.05em;
+            box-sizing: border-box; /* Include padding in width calculation */
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .form-group input[type="text"]:focus,
+        .form-group textarea:focus {
+            border-color: #00796b; /* Teal border on focus */
+            box-shadow: 0 0 0 3px rgba(0, 121, 107, 0.2); /* Subtle glow on focus */
+            outline: none; /* Remove default outline */
+        }
+
+        textarea {
+            resize: vertical; /* Allow vertical resizing only */
+            min-height: 100px; /* Minimum height for textarea */
         }
 
         button[type="submit"] {
-            background-color: #008080; /* Deep Teal */
+            background-color: #00796b;
             color: white;
-            padding: 12px 20px;
+            padding: 14px 25px; /* Larger submit button */
             border: none;
-            border-radius: 5px;
+            border-radius: 8px;
             cursor: pointer;
-            font-size: 1em;
-            transition: background-color 0.3s ease;
+            font-size: 1.1em;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
+            margin-top: 10px; /* Space above submit button */
         }
 
         button[type="submit"]:hover {
-            background-color: #005050; /* Darker Teal for hover */
+            background-color: #005a4e;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
         }
 
+        /* Notes List */
         #notes-list {
-            display: grid; /* Keep as grid for notes display */
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 20px;
+            gap: 20px; /* Maintained gap */
         }
 
         .note-card {
             background-color: #ffffff;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 15px;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e0e0e0; /* Lighter border */
+            border-radius: 10px; /* Softer corners */
+            padding: 20px; /* More padding */
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08); /* Improved shadow */
             position: relative;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            transition: transform 0.2s ease, box-shadow 0.2s ease; /* Smooth hover effect */
+        }
+
+        .note-card:hover {
+            transform: translateY(-5px); /* Lift card on hover */
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15); /* Stronger shadow on hover */
         }
 
         .note-card h3 {
-            font-size: 1.3em;
+            font-size: 1.5em; /* Larger note title */
             margin-top: 0;
-            margin-bottom: 10px;
-            color: #333;
+            margin-bottom: 12px; /* More space below title */
+            color: #222; /* Darker for better contrast */
+            word-break: break-word; /* Prevents long words from overflowing */
         }
 
         .note-card p {
-            font-size: 0.9em;
-            margin-bottom: 10px;
-            color: #555;
-            flex-grow: 1; /* Allows content to push footer down */
+            font-size: 1em; /* Standard text size */
+            margin-bottom: 15px; /* More space below content */
+            color: #444; /* Slightly softer text */
+            flex-grow: 1;
+            overflow-wrap: break-word; /* Ensures text wraps */
         }
 
         .note-card .meta-info {
-            font-size: 0.8em;
-            color: #777;
-            border-top: 1px solid #eee;
-            padding-top: 8px;
-            margin-top: 10px;
+            font-size: 0.85em; /* Slightly larger meta info */
+            color: #888; /* Softer color */
+            border-top: 1px solid #f0f0f0; /* Lighter separator */
+            padding-top: 10px;
+            margin-top: 15px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
         .delete-note-btn {
-            background-color: #ff5252; /* Red, kept for delete action clarity */
+            background-color: #dc3545; /* Bootstrap-like red for delete */
             color: white;
             border: none;
-            padding: 5px 8px;
-            border-radius: 4px;
+            padding: 6px 10px; /* More padding */
+            border-radius: 5px;
             cursor: pointer;
-            font-size: 0.8em;
+            font-size: 0.9em;
             line-height: 1;
-            transition: background-color 0.2s ease;
+            transition: background-color 0.2s ease, transform 0.1s ease;
         }
 
         .delete-note-btn:hover {
-            background-color: #e00000;
+            background-color: #c82333; /* Darker red on hover */
+            transform: scale(1.05); /* Slightly enlarge on hover */
         }
 
+        /* Back to Home Buttons */
+        .back-button-common {
+            background-color: #6c757d; /* Muted gray for back buttons */
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background-color 0.3s ease;
+            display: block; /* Make it a block element */
+            width: fit-content; /* Fit content width */
+            margin: 20px auto 0; /* Center the button below content */
+        }
+
+        .back-button-common:hover {
+            background-color: #5a6268;
+        }
+
+
+        /* Responsive Adjustments */
         @media (max-width: 768px) {
             #main-app-content {
-                padding: 10px;
+                padding: 15px;
             }
             #notes-list {
                 grid-template-columns: 1fr;
             }
+            #home-page-options {
+                padding: 40px 20px;
+            }
             #home-page-options button {
                 width: 100%;
+                font-size: 1.15em;
+                padding: 15px 20px;
+            }
+            header h1 {
+                font-size: 1.5em;
+            }
+            #add-note-section h2 {
+                font-size: 1.5em;
+            }
+            .note-card h3 {
+                font-size: 1.3em;
             }
         }
     </style>
@@ -234,11 +335,11 @@
                 </div>
                 <button type="submit">Add Note</button>
             </form>
-            <button id="backToHomeFromCreate" style="background-color: #6c757d; margin-top: 15px;">Back to Options</button>
+            <button id="backToHomeFromCreate" class="back-button-common">Back to Options</button>
         </div>
 
         <div id="notes-list">
-            <button id="backToHomeFromView" style="background-color: #6c757d; margin-top: 15px;">Back to Options</button>
+            <button id="backToHomeFromView" class="back-button-common">Back to Options</button>
         </div>
     </div>
 
@@ -290,15 +391,9 @@
             }
 
             function renderNotes(notesToRender) {
-                notesListDiv.innerHTML = '';
-                 // Add back to home button only if notes exist or if user specifically navigated here
-                if (notesToRender.length > 0 || notesListDiv.style.display === 'grid') { // Check if notes are being displayed
-                    const backButtonContainer = document.createElement('div');
-                    backButtonContainer.style.textAlign = 'center';
-                    backButtonContainer.style.gridColumn = '1 / -1'; // Span across all columns
-                    backButtonContainer.appendChild(backToHomeFromViewBtn);
-                    notesListDiv.appendChild(backButtonContainer);
-                }
+                notesListDiv.innerHTML = ''; // Clear existing notes
+                // Append the back-to-home button for the notes list first
+                notesListDiv.appendChild(backToHomeFromViewBtn);
 
 
                 notesToRender.forEach(note => {
@@ -314,7 +409,8 @@
                             <button class="delete-note-btn" data-id="${note.id}">Delete</button>
                         </div>
                     `;
-                    notesListDiv.appendChild(noteCard);
+                    // Insert note cards *before* the back button if you want the button always at the bottom
+                    notesListDiv.insertBefore(noteCard, backToHomeFromViewBtn);
                 });
 
                 addDeleteButtonListeners();
@@ -351,37 +447,43 @@
             }
 
             // --- 5. Navigation Functions ---
-            function showHomePage() {
-                homePageOptions.style.display = 'flex';
-                addNoteSection.style.display = 'none';
-                notesListDiv.style.display = 'none';
-            }
+            function showSection(sectionToShow) {
+                // Hide all main sections first
+                homePageOptions.classList.remove('active');
+                addNoteSection.classList.remove('active');
+                notesListDiv.classList.remove('active');
 
-            function showCreateNoteForm() {
-                homePageOptions.style.display = 'none';
-                addNoteSection.style.display = 'block';
-                notesListDiv.style.display = 'none';
-                noteTitleInput.focus(); // Focus on the title input
-            }
-
-            function showNotesList() {
                 homePageOptions.style.display = 'none';
                 addNoteSection.style.display = 'none';
-                notesListDiv.style.display = 'grid'; // Use grid for notes list
-                // Firebase real-time listener will automatically populate
+                notesListDiv.style.display = 'none';
+
+                // Then show the requested section with animation
+                if (sectionToShow === homePageOptions) {
+                    homePageOptions.style.display = 'flex'; // Home is flex
+                } else if (sectionToShow === addNoteSection) {
+                    addNoteSection.style.display = 'block'; // Form is block
+                    noteTitleInput.focus();
+                } else if (sectionToShow === notesListDiv) {
+                    notesListDiv.style.display = 'grid'; // Notes list is grid
+                }
+
+                // Trigger animation
+                setTimeout(() => { // Small delay to ensure display change takes effect before adding active class
+                    sectionToShow.classList.add('active');
+                }, 50);
             }
 
 
             // --- 6. Event Listeners ---
 
             // Initial view
-            showHomePage();
+            showSection(homePageOptions);
 
-            createNoteBtn.addEventListener('click', showCreateNoteForm);
-            viewNotesBtn.addEventListener('click', showNotesList);
+            createNoteBtn.addEventListener('click', () => showSection(addNoteSection));
+            viewNotesBtn.addEventListener('click', () => showSection(notesListDiv));
 
-            backToHomeFromCreateBtn.addEventListener('click', showHomePage);
-            backToHomeFromViewBtn.addEventListener('click', showHomePage);
+            backToHomeFromCreateBtn.addEventListener('click', () => showSection(homePageOptions));
+            backToHomeFromViewBtn.addEventListener('click', () => showSection(homePageOptions));
 
 
             addNoteForm.addEventListener('submit', async (e) => {
