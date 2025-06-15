@@ -424,3 +424,393 @@
             // --- 1. Firebase Configuration ---
             const firebaseConfig = {
                 apiKey: "AIzaSyAddn3_6GWdQ8oeQl2-H1MfKyHrwUVh70Y",
+                authDomain: "joesquicknotes.firebaseapp.com",
+                projectId: "joesquicknotes",
+                storageBucket: "joesquicknotes.firebasestorage.app",
+                messagingSenderId: "903482150331",
+                appId: "1:903482150331:web:609caf78b6fd54e094489e",
+                measurementId: "G-J1K97GXPFR"
+            };
+
+            // Initialize Firebase
+            firebase.initializeApp(firebaseConfig);
+            const db = firebase.firestore();
+            const tasksCollection = db.collection('tasks');
+
+            let allTasksData = []; // This will hold all tasks, complete and incomplete
+
+            // --- 2. Global Variables & DOM Elements ---
+            const homePageOptions = document.getElementById('home-page-options');
+            const createTaskBtn = document.getElementById('createTaskBtn');
+            const viewTasksBtn = document.getElementById('viewTasksBtn');
+            const viewCompletedTasksBtn = document.getElementById('viewCompletedTasksBtn'); // New button
+            const addTaskSection = document.getElementById('add-task-section');
+            const addTaskForm = document.getElementById('addTaskForm');
+            const taskTitleInput = document.getElementById('taskTitle');
+            const taskDescriptionInput = document.getElementById('taskDescription');
+            const tasksListDiv = document.getElementById('tasks-list');
+            const completedTasksListDiv = document.getElementById('completed-tasks-list'); // New completed list div
+            // const userDisplay = document.getElementById('user-display'); // Removed from HTML
+
+            const backToHomeFromCreateBtn = document.getElementById('backToHomeFromCreate');
+            const backToHomeFromViewBtn = document.getElementById('backToHomeFromView');
+            const backToHomeFromCompletedBtn = document.getElementById('backToHomeFromCompleted'); // New back button
+
+
+            // --- 3. Helper Functions ---
+            function formatTimestamp(timestamp) {
+                if (timestamp && timestamp.toDate) {
+                    return timestamp.toDate().toLocaleString();
+                }
+                if (timestamp instanceof Date) {
+                    return timestamp.toLocaleString();
+                }
+                return 'N/A';
+            }
+
+            // Function to render INCOMPLETE tasks
+            function renderIncompleteTasks() {
+                const incompleteTasks = allTasksData.filter(task => !task.completed);
+                tasksListDiv.innerHTML = '<h2>Current Tasks</h2>'; // Keep the heading
+                tasksListDiv.appendChild(backToHomeFromViewBtn);
+
+                if (incompleteTasks.length === 0) {
+                    const noTasksMessage = document.createElement('p');
+                    noTasksMessage.className = 'no-tasks-message';
+                    noTasksMessage.textContent = "You have no outstanding tasks. Great job!";
+                    tasksListDiv.insertBefore(noTasksMessage, backToHomeFromViewBtn);
+                }
+
+                incompleteTasks.forEach(task => {
+                    const taskCard = document.createElement('div');
+                    taskCard.className = `task-card`; // No 'completed' class here
+                    taskCard.dataset.id = task.id;
+
+                    taskCard.innerHTML = `
+                        <div class="task-content">
+                            <h3>${task.title}</h3>
+                            <p>${task.description ? task.description.replace(/\n/g, '<br>') : 'No description'}</p>
+                        </div>
+                        <div class="meta-info">
+                            <div class="task-checkbox-container">
+                                <input type="checkbox" class="task-complete-checkbox" data-id="${task.id}" ${task.completed ? 'checked' : ''}>
+                                <span>Completed</span>
+                            </div>
+                            <span>Created: ${formatTimestamp(task.createdAt)}</span>
+                        </div>
+                        <div class="task-actions">
+                            <button class="edit-task-btn" data-id="${task.id}">Edit</button>
+                            <button class="delete-task-btn" data-id="${task.id}">Delete</button>
+                        </div>
+                    `;
+                    tasksListDiv.insertBefore(taskCard, backToHomeFromViewBtn);
+                });
+
+                addDeleteButtonListeners();
+                addEditButtonListeners();
+                addCompleteCheckboxListeners();
+            }
+
+            // Function to render COMPLETED tasks
+            function renderCompletedTasks() {
+                const completedTasks = allTasksData.filter(task => task.completed);
+                completedTasksListDiv.innerHTML = '<h2>Completed Tasks</h2>'; // Keep the heading
+                completedTasksListDiv.appendChild(backToHomeFromCompletedBtn);
+
+                if (completedTasks.length === 0) {
+                    const noCompletedTasksMessage = document.createElement('p');
+                    noCompletedTasksMessage.className = 'no-tasks-message';
+                    noCompletedTasksMessage.textContent = "No tasks have been completed yet.";
+                    completedTasksListDiv.insertBefore(noCompletedTasksMessage, backToHomeFromCompletedBtn);
+                }
+
+                completedTasks.forEach(task => {
+                    const taskCard = document.createElement('div');
+                    taskCard.className = `task-card completed`; // Always 'completed' class for styling
+                    taskCard.dataset.id = task.id;
+
+                    taskCard.innerHTML = `
+                        <div class="task-content">
+                            <h3>${task.title}</h3>
+                            <p>${task.description ? task.description.replace(/\n/g, '<br>') : 'No description'}</p>
+                        </div>
+                        <div class="meta-info">
+                            <span>Completed: ${formatTimestamp(task.completedAt)}</span>
+                            <span>Created: ${formatTimestamp(task.createdAt)}</span>
+                        </div>
+                        <div class="task-actions">
+                            <button class="mark-incomplete-btn" data-id="${task.id}">Mark Incomplete</button>
+                            <button class="delete-task-btn" data-id="${task.id}">Delete</button>
+                        </div>
+                    `;
+                    completedTasksListDiv.insertBefore(taskCard, backToHomeFromCompletedBtn);
+                });
+
+                addDeleteButtonListeners(); // Delete button works for both
+                addMarkIncompleteButtonListeners(); // New listener for marking incomplete
+            }
+
+
+            // --- 4. Firebase Operations ---
+            async function addTask(taskData) {
+                try {
+                    await tasksCollection.add({
+                        title: taskData.title,
+                        description: taskData.description,
+                        completed: false,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    });
+                    addTaskForm.reset();
+                    taskTitleInput.focus();
+                    alert("Task added successfully!");
+                } catch (e) {
+                    console.error("Error adding document: ", e);
+                    alert("Error adding task. Please try again.");
+                }
+            }
+
+            async function deleteTask(id) {
+                if (!confirm("Are you sure you want to delete this task?")) {
+                    return;
+                }
+                try {
+                    await tasksCollection.doc(id).delete();
+                } catch (e) {
+                    console.error("Error removing document: ", e);
+                    alert("Error deleting task. Please try again.");
+                }
+            }
+
+            async function toggleTaskComplete(id, currentStatus) {
+                try {
+                    const updateData = {
+                        completed: !currentStatus
+                    };
+                    // If marking complete, add timestamp; if unmarking, remove it
+                    if (!currentStatus === true) { // If it's about to become completed
+                        updateData.completedAt = firebase.firestore.FieldValue.serverTimestamp();
+                    } else { // If it's about to become incomplete
+                        updateData.completedAt = firebase.firestore.FieldValue.delete();
+                    }
+
+                    await tasksCollection.doc(id).update(updateData);
+                } catch (e) {
+                    console.error("Error toggling task status: ", e);
+                    alert("Error updating task status. Please try again.");
+                }
+            }
+
+            async function updateTask(id, newTitle, newDescription) {
+                try {
+                    await tasksCollection.doc(id).update({
+                        title: newTitle,
+                        description: newDescription
+                    });
+                    alert("Task updated successfully!");
+                } catch (e) {
+                    console.error("Error updating task: ", e);
+                    alert("Error updating task. Please try again.");
+                }
+            }
+
+
+            // --- 5. Navigation Functions ---
+            function showSection(sectionToShow) {
+                // 1. Reset all sections to hidden state and remove any animation classes
+                [homePageOptions, addTaskSection, tasksListDiv, completedTasksListDiv].forEach(section => {
+                    section.style.display = 'none';
+                    // Ensure both 'active' and 'fade-in-up' are removed for a clean slate
+                    section.classList.remove('active', 'fade-in-up');
+                });
+
+                // 2. Determine display type and apply animation class based on the section to show
+                if (sectionToShow === homePageOptions) {
+                    sectionToShow.style.display = 'flex'; // Homepage uses flexbox
+                    // Apply fade-in-up for homepage after a short delay
+                    setTimeout(() => {
+                        sectionToShow.classList.add('fade-in-up');
+                    }, 50); // Small delay allows browser to register display:flex before transition
+                } else if (sectionToShow === addTaskSection) {
+                    sectionToShow.style.display = 'block'; // Add task form uses block
+                    // Apply 'active' class for fade/pan effect for add task section
+                    setTimeout(() => {
+                        sectionToShow.classList.add('active');
+                        taskTitleInput.focus(); // Keep focus here for convenience
+                    }, 50);
+                } else if (sectionToShow === tasksListDiv) {
+                    sectionToShow.style.display = 'grid'; // Tasks list uses grid
+                    renderIncompleteTasks(); // Render incomplete tasks when viewing this section
+                    // Apply 'active' class for fade/pan effect for tasks list
+                    setTimeout(() => {
+                        sectionToShow.classList.add('active');
+                    }, 50);
+                } else if (sectionToShow === completedTasksListDiv) { // New section
+                    sectionToShow.style.display = 'grid'; // Completed tasks list uses grid
+                    renderCompletedTasks(); // Render completed tasks when viewing this section
+                    // Apply 'active' class for fade/pan effect for completed tasks list
+                    setTimeout(() => {
+                        sectionToShow.classList.add('active');
+                    }, 50);
+                }
+            }
+
+
+            // --- 6. Event Listeners ---
+
+            // Initial view - this single call is now sufficient for initial load and animation
+            showSection(homePageOptions);
+
+            createTaskBtn.addEventListener('click', () => showSection(addTaskSection));
+            viewTasksBtn.addEventListener('click', () => showSection(tasksListDiv));
+            viewCompletedTasksBtn.addEventListener('click', () => showSection(completedTasksListDiv)); // New event listener
+
+            backToHomeFromCreateBtn.addEventListener('click', () => showSection(homePageOptions));
+            backToHomeFromViewBtn.addEventListener('click', () => showSection(homePageOptions));
+            backToHomeFromCompletedBtn.addEventListener('click', () => showSection(homePageOptions)); // New event listener
+
+
+            addTaskForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const newtask = {
+                    title: taskTitleInput.value.trim(),
+                    description: taskDescriptionInput.value.trim() || ''
+                };
+
+                if (newtask.title) {
+                    await addTask(newtask);
+                } else {
+                    alert("Task title is required!");
+                }
+            });
+
+            function addDeleteButtonListeners() {
+                // Selects all delete buttons, so it works for both incomplete and completed lists
+                document.querySelectorAll('.delete-task-btn').forEach(button => {
+                    button.onclick = async (e) => {
+                        const taskId = e.target.dataset.id;
+                        await deleteTask(taskId);
+                    };
+                });
+            }
+
+            function addCompleteCheckboxListeners() {
+                // Only on incomplete tasks list
+                document.querySelectorAll('#tasks-list .task-complete-checkbox').forEach(checkbox => {
+                    checkbox.onchange = async (e) => {
+                        const taskId = e.target.dataset.id;
+                        const isCompleted = e.target.checked;
+                        await toggleTaskComplete(taskId, !isCompleted); // Pass current status, Firestore will toggle
+                    };
+                });
+            }
+
+            function addMarkIncompleteButtonListeners() {
+                // Only on completed tasks list
+                document.querySelectorAll('#completed-tasks-list .mark-incomplete-btn').forEach(button => {
+                    button.onclick = async (e) => {
+                        const taskId = e.target.dataset.id;
+                        // We are marking it incomplete, so current status is implicitly true
+                        await toggleTaskComplete(taskId, true);
+                    };
+                });
+            }
+
+
+            function addEditButtonListeners() {
+                // Edit button only on incomplete tasks list
+                document.querySelectorAll('#tasks-list .edit-task-btn').forEach(button => {
+                    button.onclick = async (e) => {
+                        const taskId = e.target.dataset.id;
+                        const taskCard = e.target.closest('.task-card');
+                        const currentTask = allTasksData.find(t => t.id === taskId);
+
+                        if (!currentTask) return;
+
+                        // Replace H3 with input
+                        const titleEl = taskCard.querySelector('h3');
+                        const originalTitle = titleEl.textContent;
+                        titleEl.innerHTML = `<input type="text" class="edit-title-input" value="${originalTitle.replace(/"/g, '&quot;')}" style="width:100%; padding: 8px; font-size: 1.2em; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">`;
+
+                        // Replace P with textarea
+                        const descriptionEl = taskCard.querySelector('p');
+                        const originalDescription = currentTask.description || ''; // Use original data for description
+                        descriptionEl.innerHTML = `<textarea class="edit-description-textarea" rows="4" style="width:100%; padding: 8px; font-size: 0.95em; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">${originalDescription.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</textarea>`;
+
+                        // Hide original action buttons and meta-info
+                        taskCard.querySelector('.task-actions').style.display = 'none';
+                        taskCard.querySelector('.meta-info').style.display = 'none';
+
+
+                        // Create and append Save/Cancel buttons
+                        const saveButton = document.createElement('button');
+                        saveButton.className = 'save-task-btn';
+                        saveButton.textContent = 'Save';
+                        saveButton.dataset.id = taskId;
+
+                        const cancelButton = document.createElement('button');
+                        cancelButton.className = 'cancel-task-btn';
+                        cancelButton.textContent = 'Cancel';
+                        cancelButton.dataset.id = taskId;
+
+                        const editControlsDiv = document.createElement('div');
+                        editControlsDiv.className = 'task-actions edit-mode-controls';
+                        editControlsDiv.appendChild(saveButton);
+                        editControlsDiv.appendChild(cancelButton);
+                        taskCard.appendChild(editControlsDiv);
+
+                        // Event Listeners for Save/Cancel
+                        saveButton.onclick = async () => {
+                            const newTitle = taskCard.querySelector('.edit-title-input').value.trim();
+                            const newDescription = taskCard.querySelector('.edit-description-textarea').value.trim();
+
+                            if (newTitle) {
+                                await updateTask(taskId, newTitle, newDescription);
+                            } else {
+                                alert("Task title cannot be empty!");
+                            }
+                        };
+
+                        cancelButton.onclick = () => {
+                            // Re-render the appropriate list to revert current state and remove edit controls
+                            // Determine which list is currently active and re-render it
+                            if (tasksListDiv.classList.contains('active')) {
+                                renderIncompleteTasks();
+                            } else if (completedTasksListDiv.classList.contains('active')) {
+                                renderCompletedTasks();
+                            } else {
+                                // Fallback or render all if no specific list is active (shouldn't happen with current flow)
+                                renderIncompleteTasks(); // Default to main task list
+                            }
+                        };
+                    };
+                });
+            }
+
+
+            // --- 7. Real-time Firebase Listener ---
+            tasksCollection.orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+                allTasksData = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+
+                // Only re-render the currently active list to avoid unnecessary work
+                if (tasksListDiv.classList.contains('active')) {
+                    renderIncompleteTasks();
+                } else if (completedTasksListDiv.classList.contains('active')) {
+                    renderCompletedTasks();
+                }
+                // If home page or add task page is active, no need to re-render task lists immediately.
+                // They will be rendered when navigated to.
+
+            }, error => {
+                console.error("Error listening to tasks:", error);
+                if (error.code === 'permission-denied') {
+                    alert("Permission Denied: Check your Firebase Firestore security rules!");
+                }
+            });
+
+        });
+    </script>
+</body>
+</html>
