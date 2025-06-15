@@ -1,30 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Homeflow — Household Task Manager</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>
-        /* Make body a flex container to push footer down naturally and center overall content */
         body {
             font-family: 'Inter', sans-serif;
-            min-height: 100vh; /* Make body fill the viewport height */
-            display: flex;
-            flex-direction: column;
-            align-items: center; /* Center content horizontally */
-            padding: 1.5rem; /* Equivalent to p-6 */
-            box-sizing: border-box; /* Include padding in element's total width and height */
-            background-color: #f3f4f6; /* Equivalent to bg-gray-100 */
-            color: #374151; /* Equivalent to text-gray-800 */
+            background-color: #f3f4f6; /* bg-gray-100 */
+            color: #374151; /* text-gray-800 */
+            padding: 1.5rem; /* p-6 */
         }
-        /* Custom styles for section transitions/visibility */
+        /* Basic hidden class */
         .hidden { display: none; }
-        .block { display: block; }
-        .flex { display: flex; }
+        .active { display: block; } /* For sections that are active */
 
-        /* Smooth transition for showing/hiding sections */
+        /* Optional: simple fade in for sections */
         .section-transition {
             opacity: 0;
             transform: translateY(20px);
@@ -34,82 +27,73 @@
             opacity: 1;
             transform: translateY(0);
         }
-
-        /* Special fade-in for the home page options */
-        #home-page-options.fade-in-up {
-            opacity: 1;
-            transform: translateY(0);
-            transition: opacity 1.2s ease-out, transform 1.2s ease-out;
-        }
-
-        /* Consistent focus styles for inputs/textareas using Tailwind's ring concept */
-        input:focus, textarea:focus {
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.4); /* Tailwind's indigo-500 equivalent */
-        }
     </style>
 </head>
 <body>
-    <header class="w-full max-w-3xl mb-10">
-        <h1 class="text-4xl font-semibold text-gray-900">🏠 Homeflow</h1>
-        <p class="text-lg text-gray-600 mt-2">The simple task manager for your home.</p>
-    </header>
+    <div class="max-w-3xl mx-auto">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-semibold text-gray-900">🏠 Homeflow</h1>
+            <p class="text-lg text-gray-600 mt-2">The simple task manager for your home.</p>
+        </header>
 
-    <main class="flex-grow w-full flex flex-col items-center">
-        <div id="home-page-options" class="w-full max-w-3xl bg-white shadow-xl rounded-2xl p-6 mb-8 flex flex-col items-center gap-6 text-center section-transition mx-auto mt-8">
-            <h2 class="text-3xl font-bold text-gray-800 mb-4">Welcome Home!</h2>
-            <button id="createTaskBtn" class="bg-indigo-600 text-white px-8 py-4 rounded-xl text-xl hover:bg-indigo-700 transition w-full max-w-sm">Create New Task</button>
-            <button id="viewTasksBtn" class="bg-blue-500 text-white px-8 py-4 rounded-xl text-xl hover:bg-blue-600 transition w-full max-w-sm">View Current Tasks</button>
-            <button id="viewCompletedTasksBtn" class="bg-green-500 text-white px-8 py-4 rounded-xl text-xl hover:bg-green-600 transition w-full max-w-sm">View Completed Tasks</button>
-        </div>
-
-        <section id="add-task-section" class="w-full max-w-3xl bg-white shadow-xl rounded-2xl p-6 mb-8 section-transition hidden mx-auto mt-8">
-            <h2 class="text-2xl font-semibold text-gray-900 mb-6 border-b pb-4">Add New Task</h2>
-            <form id="addTaskForm" class="space-y-5">
-                <div>
-                    <label for="taskTitle" class="block text-gray-700 text-sm font-bold mb-2">Task Title:</label>
-                    <input
-                        type="text"
-                        id="taskTitle"
-                        required
-                        class="w-full border border-gray-300 rounded-xl px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                        placeholder="e.g., Clean the garage"
-                    />
+        <main>
+            <div id="home-page-options" class="bg-white shadow-xl rounded-2xl p-6 mb-8 text-center section-transition active">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">Welcome Home!</h2>
+                <div class="space-y-4">
+                    <button id="createTaskBtn" class="bg-indigo-600 text-white px-8 py-4 rounded-xl text-xl hover:bg-indigo-700 transition w-full">Create New Task</button>
+                    <button id="viewTasksBtn" class="bg-blue-500 text-white px-8 py-4 rounded-xl text-xl hover:bg-blue-600 transition w-full">View Current Tasks</button>
+                    <button id="viewCompletedTasksBtn" class="bg-green-500 text-white px-8 py-4 rounded-xl text-xl hover:bg-green-600 transition w-full">View Completed Tasks</button>
                 </div>
-                <div>
-                    <label for="taskDescription" class="block text-gray-700 text-sm font-bold mb-2">Description (optional):</label>
-                    <textarea
-                        id="taskDescription"
-                        rows="4"
-                        class="w-full border border-gray-300 rounded-xl px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-y"
-                        placeholder="Details about the task..."
-                    ></textarea>
-                </div>
-                <button type="submit" class="bg-indigo-600 text-white px-6 py-3 rounded-xl text-lg hover:bg-indigo-700 transition w-full">Add Task</button>
-            </form>
-            <button id="backToHomeFromCreate" class="mt-8 bg-gray-500 text-white px-5 py-2 rounded-lg text-base hover:bg-gray-600 transition block mx-auto">Back to Home</button>
-        </section>
+            </div>
 
-        <section id="tasks-list" class="w-full max-w-3xl section-transition hidden mx-auto mt-8">
-            <h2 class="text-2xl font-semibold text-gray-900 mb-6 border-b pb-4">Current Tasks</h2>
-            <ul class="space-y-4" id="incomplete-tasks-ul">
-                </ul>
-            <p id="no-incomplete-tasks-message" class="text-center text-gray-500 mt-8 hidden">You have no outstanding tasks. Great job!</p>
-            <button id="backToHomeFromView" class="mt-8 bg-gray-500 text-white px-5 py-2 rounded-lg text-base hover:bg-gray-600 transition block mx-auto">Back to Home</button>
-        </section>
+            <section id="add-task-section" class="bg-white shadow-xl rounded-2xl p-6 mb-8 section-transition hidden">
+                <h2 class="text-2xl font-semibold text-gray-900 mb-6 border-b pb-4">Add New Task</h2>
+                <form id="addTaskForm" class="space-y-5">
+                    <div>
+                        <label for="taskTitle" class="block text-gray-700 text-sm font-bold mb-2">Task Title:</label>
+                        <input
+                            type="text"
+                            id="taskTitle"
+                            required
+                            class="w-full border border-gray-300 rounded-xl px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                            placeholder="e.g., Clean the garage"
+                        />
+                    </div>
+                    <div>
+                        <label for="taskDescription" class="block text-gray-700 text-sm font-bold mb-2">Description (optional):</label>
+                        <textarea
+                            id="taskDescription"
+                            rows="4"
+                            class="w-full border border-gray-300 rounded-xl px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-y"
+                            placeholder="Details about the task..."
+                        ></textarea>
+                    </div>
+                    <button type="submit" class="bg-indigo-600 text-white px-6 py-3 rounded-xl text-lg hover:bg-indigo-700 transition w-full">Add Task</button>
+                </form>
+                <button id="backToHomeFromCreate" class="mt-8 bg-gray-500 text-white px-5 py-2 rounded-lg text-base hover:bg-gray-600 transition block mx-auto">Back to Home</button>
+            </section>
 
-        <section id="completed-tasks-list" class="w-full max-w-3xl section-transition hidden mx-auto mt-8">
-            <h2 class="text-2xl font-semibold text-gray-900 mb-6 border-b pb-4">Completed Tasks</h2>
-            <ul class="space-y-4" id="complete-tasks-ul">
-                </ul>
-            <p id="no-completed-tasks-message" class="text-center text-gray-500 mt-8 hidden">No tasks have been completed yet. Get to work!</p>
-            <button id="backToHomeFromCompleted" class="mt-8 bg-gray-500 text-white px-5 py-2 rounded-lg text-base hover:bg-gray-600 transition block mx-auto">Back to Home</button>
-        </section>
-    </main>
+            <section id="tasks-list" class="section-transition hidden">
+                <h2 class="text-2xl font-semibold text-gray-900 mb-6 border-b pb-4">Current Tasks</h2>
+                <ul class="space-y-4" id="incomplete-tasks-ul">
+                    </ul>
+                <p id="no-incomplete-tasks-message" class="text-center text-gray-500 mt-8 hidden">You have no outstanding tasks. Great job!</p>
+                <button id="backToHomeFromView" class="mt-8 bg-gray-500 text-white px-5 py-2 rounded-lg text-base hover:bg-gray-600 transition block mx-auto">Back to Home</button>
+            </section>
 
-    <footer class="mt-12 text-sm text-gray-400 w-full max-w-3xl text-center">
-        Built with ☕ and TailwindCSS
-    </footer>
+            <section id="completed-tasks-list" class="section-transition hidden">
+                <h2 class="text-2xl font-semibold text-gray-900 mb-6 border-b pb-4">Completed Tasks</h2>
+                <ul class="space-y-4" id="complete-tasks-ul">
+                    </ul>
+                <p id="no-completed-tasks-message" class="text-center text-gray-500 mt-8 hidden">No tasks have been completed yet. Get to work!</p>
+                <button id="backToHomeFromCompleted" class="mt-8 bg-gray-500 text-white px-5 py-2 rounded-lg text-base hover:bg-gray-600 transition block mx-auto">Back to Home</button>
+            </section>
+        </main>
+
+        <footer class="mt-12 text-sm text-gray-400 text-center">
+            Built with ☕ and TailwindCSS
+        </footer>
+    </div>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
@@ -154,402 +138,4 @@
 
             const completedTasksListSection = document.getElementById('completed-tasks-list');
             const completeTasksUl = document.getElementById('complete-tasks-ul');
-            const noCompletedTasksMessage = document.getElementById('no-completed-tasks-message');
-
-            const backToHomeFromCreateBtn = document.getElementById('backToHomeFromCreate');
-            const backToHomeFromViewBtn = document.getElementById('backToHomeFromView');
-            const backToHomeFromCompletedBtn = document.getElementById('backToHomeFromCompleted');
-
-
-            // --- 3. Helper Functions ---
-            function formatTimestamp(timestamp) {
-                if (timestamp && timestamp.toDate) {
-                    return timestamp.toDate().toLocaleString();
-                }
-                if (timestamp instanceof Date) {
-                    return timestamp.toLocaleString();
-                }
-                return 'N/A';
-            }
-
-            // Function to render INCOMPLETE tasks
-            function renderIncompleteTasks() {
-                const incompleteTasks = allTasksData.filter(task => !task.completed);
-                incompleteTasksUl.innerHTML = ''; // Clear previous tasks
-
-                if (incompleteTasks.length === 0) {
-                    noIncompleteTasksMessage.classList.remove('hidden');
-                } else {
-                    noIncompleteTasksMessage.classList.add('hidden');
-                }
-
-                incompleteTasks.forEach(task => {
-                    const listItem = document.createElement('li');
-                    listItem.className = `flex items-center justify-between bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition group`;
-                    listItem.dataset.id = task.id;
-
-                    listItem.innerHTML = `
-                        <div class="flex-grow">
-                            <p class="text-lg font-medium text-gray-800">${task.title}</p>
-                            ${task.description ? `<p class="text-sm text-gray-500">${task.description.replace(/\n/g, '<br>')}</p>` : ''}
-                            <p class="text-xs text-gray-400 mt-1">Created: ${formatTimestamp(task.createdAt)}</p>
-                        </div>
-                        <div class="flex items-center space-x-3 ml-4">
-                            <label class="flex items-center cursor-pointer">
-                                <input type="checkbox" class="task-complete-checkbox form-checkbox h-5 w-5 text-green-600 rounded" data-id="${task.id}" ${task.completed ? 'checked' : ''}>
-                                <span class="ml-2 text-sm text-green-600 font-semibold">Done</span>
-                            </label>
-                            <div class="task-actions flex space-x-2">
-                                <button class="edit-task-btn text-blue-500 hover:text-blue-700 transition" data-id="${task.id}" title="Edit Task">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                        <path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" />
-                                        <path fill-rule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clip-rule="evenodd" />
-                                    </svg>
-                                </button>
-                                <button class="delete-task-btn text-red-500 hover:text-red-700 transition" data-id="${task.id}" title="Delete Task">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1zm1 3a1 1 0 100 2h4a1 1 0 100-2H8z" clip-rule="evenodd" />
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                    incompleteTasksUl.appendChild(listItem);
-                });
-
-                // Attach event listeners after rendering
-                addDeleteButtonListeners();
-                addEditButtonListeners();
-                addCompleteCheckboxListeners();
-            }
-
-            // Function to render COMPLETED tasks
-            function renderCompletedTasks() {
-                const completedTasks = allTasksData.filter(task => task.completed);
-                completeTasksUl.innerHTML = ''; // Clear previous tasks
-
-                if (completedTasks.length === 0) {
-                    noCompletedTasksMessage.classList.remove('hidden');
-                } else {
-                    noCompletedTasksMessage.classList.add('hidden');
-                }
-
-                completedTasks.forEach(task => {
-                    const listItem = document.createElement('li');
-                    listItem.className = `flex items-center justify-between bg-white p-4 rounded-xl shadow-sm hover:shadow-md transition opacity-70`; // Completed styling
-                    listItem.dataset.id = task.id;
-
-                    listItem.innerHTML = `
-                        <div class="flex-grow">
-                            <p class="text-lg font-medium text-gray-500 line-through">${task.title}</p>
-                            ${task.description ? `<p class="text-sm text-gray-400 line-through">${task.description.replace(/\n/g, '<br>')}</p>` : ''}
-                            <p class="text-xs text-gray-400 mt-1">Completed: ${formatTimestamp(task.completedAt)}</p>
-                            <p class="text-xs text-gray-400">Created: ${formatTimestamp(task.createdAt)}</p>
-                        </div>
-                        <div class="flex items-center space-x-3 ml-4">
-                            <div class="task-actions flex space-x-2">
-                                <button class="mark-incomplete-btn text-yellow-500 hover:text-yellow-700 transition" data-id="${task.id}" title="Mark Incomplete">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
-                                    </svg>
-                                </button>
-                                <button class="delete-task-btn text-red-500 hover:text-red-700 transition" data-id="${task.id}" title="Delete Task">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 011-1h4a1 1 0 110 2H8a1 1 0 01-1-1zm1 3a1 1 0 100 2h4a1 1 0 100-2H8z" clip-rule="evenodd" />
-                                    </svg>
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                    completeTasksUl.appendChild(listItem);
-                });
-
-                // Attach event listeners after rendering
-                addDeleteButtonListeners();
-                addMarkIncompleteButtonListeners();
-            }
-
-
-            // --- 4. Firebase Operations ---
-            async function addTask(taskData) {
-                try {
-                    await tasksCollection.add({
-                        title: taskData.title,
-                        description: taskData.description,
-                        completed: false,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    });
-                    addTaskForm.reset();
-                    taskTitleInput.focus();
-                    // Go back to the home page after adding a task
-                    showSection(homePageOptions); 
-                } catch (e) {
-                    console.error("Error adding document: ", e);
-                    alert("Error adding task. Please try again.");
-                }
-            }
-
-            async function deleteTask(id) {
-                if (!confirm("Are you sure you want to delete this task?")) {
-                    return;
-                }
-                try {
-                    await tasksCollection.doc(id).delete();
-                } catch (e) {
-                    console.error("Error removing document: ", e);
-                    alert("Error deleting task. Please try again.");
-                }
-            }
-
-            async function toggleTaskComplete(id, currentStatus) {
-                try {
-                    const updateData = {
-                        completed: !currentStatus
-                    };
-                    if (!currentStatus === true) { // If it's about to become completed
-                        updateData.completedAt = firebase.firestore.FieldValue.serverTimestamp();
-                    } else { // If it's about to become incomplete
-                        updateData.completedAt = firebase.firestore.FieldValue.delete();
-                    }
-
-                    await tasksCollection.doc(id).update(updateData);
-                } catch (e) {
-                    console.error("Error toggling task status: ", e);
-                    alert("Error updating task status. Please try again.");
-                }
-            }
-
-            async function updateTask(id, newTitle, newDescription) {
-                try {
-                    await tasksCollection.doc(id).update({
-                        title: newTitle,
-                        description: newDescription
-                    });
-                    // Optional: You could show a small toast notification here instead of alert
-                } catch (e) {
-                    console.error("Error updating task: ", e);
-                    alert("Error updating task. Please try again.");
-                }
-            }
-
-
-            // --- 5. Navigation Functions ---
-            function showSection(sectionToShow) {
-                // All sections that can be shown/hidden
-                const allSections = [
-                    homePageOptions,
-                    addTaskSection,
-                    tasksListSection,
-                    completedTasksListSection
-                ];
-
-                // Hide all sections initially
-                allSections.forEach(section => {
-                    section.classList.add('hidden');
-                    section.classList.remove('active', 'fade-in-up'); // Remove animation classes
-                });
-
-                // Show the target section with appropriate display and animation
-                if (sectionToShow === homePageOptions) {
-                    sectionToShow.classList.remove('hidden');
-                    sectionToShow.classList.add('flex'); // Home page uses flex layout
-                    setTimeout(() => {
-                        sectionToShow.classList.add('fade-in-up'); // Special animation for home
-                    }, 50); // Small delay to ensure hidden is applied first
-                } else if (sectionToShow === addTaskSection) {
-                    sectionToShow.classList.remove('hidden');
-                    sectionToShow.classList.add('block'); // Form uses block layout
-                    setTimeout(() => {
-                        sectionToShow.classList.add('active');
-                        taskTitleInput.focus(); // Focus input when showing add task form
-                    }, 50);
-                } else if (sectionToShow === tasksListSection) {
-                    renderIncompleteTasks(); // Re-render tasks when navigating to this section
-                    sectionToShow.classList.remove('hidden');
-                    sectionToShow.classList.add('block'); // Section itself is a block container for UL
-                    setTimeout(() => {
-                        sectionToShow.classList.add('active');
-                    }, 50);
-                } else if (sectionToShow === completedTasksListSection) {
-                    renderCompletedTasks(); // Re-render completed tasks when navigating
-                    sectionToShow.classList.remove('hidden');
-                    sectionToShow.classList.add('block'); // Section itself is a block container for UL
-                    setTimeout(() => {
-                        sectionToShow.classList.add('active');
-                    }, 50);
-                }
-            }
-
-
-            // --- 6. Event Listeners ---
-
-            // Set the initial view to the home page
-            showSection(homePageOptions);
-
-            // Navigation button listeners
-            createTaskBtn.addEventListener('click', () => showSection(addTaskSection));
-            viewTasksBtn.addEventListener('click', () => showSection(tasksListSection));
-            viewCompletedTasksBtn.addEventListener('click', () => showSection(completedTasksListSection));
-
-            // Back to Home buttons
-            backToHomeFromCreateBtn.addEventListener('click', () => showSection(homePageOptions));
-            backToHomeFromViewBtn.addEventListener('click', () => showSection(homePageOptions));
-            backToHomeFromCompletedBtn.addEventListener('click', () => showSection(homePageOptions));
-
-            // Add Task Form submission
-            addTaskForm.addEventListener('submit', async (e) => {
-                e.preventDefault(); // Prevent default form submission
-                const newtask = {
-                    title: taskTitleInput.value.trim(),
-                    description: taskDescriptionInput.value.trim() || ''
-                };
-
-                if (newtask.title) {
-                    await addTask(newtask);
-                } else {
-                    alert("Task title is required!");
-                }
-            });
-
-            // Function to attach delete button listeners (called after rendering tasks)
-            function addDeleteButtonListeners() {
-                document.querySelectorAll('.delete-task-btn').forEach(button => {
-                    button.onclick = async (e) => {
-                        const taskId = e.target.dataset.id || e.target.closest('button').dataset.id; // Handles clicks on SVG inside button
-                        await deleteTask(taskId);
-                    };
-                });
-            }
-
-            // Function to attach 'Mark Done' checkbox listeners (for incomplete tasks)
-            function addCompleteCheckboxListeners() {
-                document.querySelectorAll('#incomplete-tasks-ul .task-complete-checkbox').forEach(checkbox => {
-                    checkbox.onchange = async (e) => {
-                        const taskId = e.target.dataset.id;
-                        const isCompleted = e.target.checked;
-                        await toggleTaskComplete(taskId, !isCompleted); // Pass current status to be toggled
-                    };
-                });
-            }
-
-            // Function to attach 'Mark Incomplete' button listeners (for completed tasks)
-            function addMarkIncompleteButtonListeners() {
-                document.querySelectorAll('#complete-tasks-ul .mark-incomplete-btn').forEach(button => {
-                    button.onclick = async (e) => {
-                        const taskId = e.target.dataset.id || e.target.closest('button').dataset.id;
-                        await toggleTaskComplete(taskId, true); // Marking as incomplete, so current status is true
-                    };
-                });
-            }
-
-            // Function to attach edit button listeners (for incomplete tasks)
-            function addEditButtonListeners() {
-                document.querySelectorAll('#incomplete-tasks-ul .edit-task-btn').forEach(button => {
-                    button.onclick = async (e) => {
-                        const taskId = e.target.dataset.id || e.target.closest('button').dataset.id;
-                        const taskCard = e.target.closest('li');
-                        const currentTask = allTasksData.find(t => t.id === taskId);
-
-                        if (!currentTask) return;
-
-                        // Get original elements and values
-                        const titleEl = taskCard.querySelector('p.text-lg.font-medium');
-                        const descriptionEl = taskCard.querySelector('p.text-sm.text-gray-500');
-                        const originalTitle = titleEl.textContent;
-                        const originalDescription = currentTask.description || '';
-
-                        // Hide original content
-                        titleEl.classList.add('hidden');
-                        if (descriptionEl) descriptionEl.classList.add('hidden');
-                        // No meta-info div in current design, so this line is effectively safe
-                        // taskCard.querySelector('.meta-info')?.classList.add('hidden');
-
-                        // Create input fields with Tailwind styling
-                        const titleInput = document.createElement('input');
-                        titleInput.type = 'text';
-                        titleInput.className = 'w-full border border-gray-300 rounded-lg px-3 py-2 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 mb-2';
-                        titleInput.value = originalTitle;
-
-                        const descriptionTextarea = document.createElement('textarea');
-                        descriptionTextarea.rows = 3;
-                        descriptionTextarea.className = 'w-full border border-gray-300 rounded-lg px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-y mb-3';
-                        descriptionTextarea.value = originalDescription;
-
-                        // Create Save/Cancel buttons with Tailwind styling
-                        const saveButton = document.createElement('button');
-                        saveButton.className = 'save-task-btn bg-green-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-600 transition flex items-center space-x-1';
-                        saveButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg><span>Save</span>`;
-
-                        const cancelButton = document.createElement('button');
-                        cancelButton.className = 'cancel-task-btn bg-gray-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-gray-600 transition flex items-center space-x-1';
-                        cancelButton.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg><span>Cancel</span>`;
-
-                        // Append new fields and buttons
-                        const contentDiv = taskCard.querySelector('.flex-grow');
-                        contentDiv.insertBefore(titleInput, titleEl);
-                        contentDiv.insertBefore(descriptionTextarea, descriptionEl || titleInput.nextSibling);
-
-                        const actionsDiv = taskCard.querySelector('.task-actions');
-                        // Change layout of action buttons to column during edit
-                        actionsDiv.classList.remove('flex', 'space-x-2');
-                        actionsDiv.classList.add('flex-col', 'items-end', 'space-y-2', 'space-x-0');
-                        actionsDiv.innerHTML = ''; // Clear original buttons
-                        actionsDiv.appendChild(saveButton);
-                        actionsDiv.appendChild(cancelButton);
-
-                        // Focus on the title input
-                        titleInput.focus();
-
-                        // Event Listeners for Save/Cancel
-                        saveButton.onclick = async () => {
-                            const newTitle = titleInput.value.trim();
-                            const newDescription = descriptionTextarea.value.trim();
-
-                            if (newTitle) {
-                                await updateTask(taskId, newTitle, newDescription);
-                                // Re-render the appropriate list to show updated task
-                                if (tasksListSection.classList.contains('active')) {
-                                    renderIncompleteTasks();
-                                }
-                            } else {
-                                alert("Task title cannot be empty!");
-                            }
-                        };
-
-                        cancelButton.onclick = () => {
-                            // Re-render the appropriate list to revert current state and remove edit controls
-                            if (tasksListSection.classList.contains('active')) {
-                                renderIncompleteTasks();
-                            }
-                        };
-                    };
-                });
-            }
-
-
-            // --- 7. Real-time Firebase Listener ---
-            // This listener fetches all tasks and updates the display whenever data changes
-            tasksCollection.orderBy('createdAt', 'desc').onSnapshot(snapshot => {
-                allTasksData = snapshot.docs.map(doc => ({
-                    id: doc.id,
-                    ...doc.data()
-                }));
-
-                // Only re-render the currently active list to avoid unnecessary work
-                if (tasksListSection.classList.contains('active')) {
-                    renderIncompleteTasks();
-                } else if (completedTasksListSection.classList.contains('active')) {
-                    renderCompletedTasks();
-                }
-                // If homePageOptions is active, no task list needs re-rendering
-            }, error => {
-                console.error("Error listening to tasks:", error);
-                if (error.code === 'permission-denied') {
-                    alert("Permission Denied: Check your Firebase Firestore security rules!");
-                }
-            });
-
-        });
-    </script>
-</body>
-</html>
+            const noCompletedTasksMessage = document.getElementById('no-completed-
