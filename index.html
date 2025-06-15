@@ -31,9 +31,11 @@
     </div>
 
     <section class="w-full max-w-3xl">
-      <h2 class="text-xl font-semibold mb-2">Active Tasks</h2>
-      <ul id="taskList" class="space-y-4"></ul>
-      <div id="completedSection" class="hidden mt-10">
+      <div id="activeSection">
+        <h2 class="text-xl font-semibold mb-2">Active Tasks</h2>
+        <ul id="taskList" class="space-y-4"></ul>
+      </div>
+      <div id="completedSection" class="hidden">
         <h2 class="text-xl font-semibold mb-2">Completed Tasks</h2>
         <ul id="completedList" class="space-y-4"></ul>
       </div>
@@ -61,10 +63,14 @@
     const taskList = document.getElementById('taskList');
     const completedList = document.getElementById('completedList');
     const completedSection = document.getElementById('completedSection');
+    const activeSection = document.getElementById('activeSection');
     const toggleCompleted = document.getElementById('toggleCompleted');
 
     toggleCompleted.addEventListener('click', () => {
+      const showingCompleted = completedSection.classList.contains('hidden');
       completedSection.classList.toggle('hidden');
+      activeSection.classList.toggle('hidden');
+      toggleCompleted.innerText = showingCompleted ? 'View Active Tasks' : 'View Completed Tasks';
     });
 
     addTaskBtn.addEventListener('click', async () => {
@@ -121,7 +127,7 @@
         wrapper.append(titleInput, descInput, timeInfo);
 
         const rightControls = document.createElement('div');
-        rightControls.className = 'flex flex-col items-center gap-2 ml-4';
+        rightControls.className = 'flex flex-row gap-2 ml-4';
 
         const editBtn = document.createElement('button');
         editBtn.innerHTML = '<i data-lucide="pencil" class="w-5 h-5 text-blue-600 hover:text-blue-800"></i>';
