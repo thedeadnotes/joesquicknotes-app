@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Real-time Note App</title>
+    <title>Simple Real-time Task App</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
@@ -60,8 +60,6 @@
             opacity: 0.8; /* Softer text */
         }
 
-        /* --- GUI IMPROVEMENTS START HERE --- */
-
         /* Interactive Home Page Options */
         #home-page-options {
             background-color: #ffffff; /* White background for the options box */
@@ -104,7 +102,7 @@
         }
 
         /* Initially hide these sections */
-        #add-note-section, #notes-list {
+        #add-task-section, #tasks-list { /* RENAMED ID */
             display: none;
             opacity: 0; /* For fade-in effect */
             transform: translateY(20px); /* For slide-up effect */
@@ -112,24 +110,26 @@
         }
 
         /* Styles for when sections are active (toggled by JS) */
-        #add-note-section.active, #notes-list.active {
+        #add-task-section.active { /* RENAMED ID */
             opacity: 1;
             transform: translateY(0);
             display: block; /* For form */
         }
-        #notes-list.active {
-            display: grid; /* Maintain grid for notes list when active */
+        #tasks-list.active { /* RENAMED ID */
+            opacity: 1;
+            transform: translateY(0);
+            display: grid; /* Maintain grid for tasks list when active */
         }
 
-        /* Add Note Section (Form) */
-        #add-note-section {
+        /* Add Task Section (Form) */
+        #add-task-section { /* RENAMED ID */
             background-color: #ffffff;
             padding: 30px; /* Increased padding */
             border-radius: 12px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
 
-        #add-note-section h2 {
+        #add-task-section h2 { /* RENAMED ID */
             margin-top: 0;
             color: #00796b;
             border-bottom: 1px solid #eee;
@@ -193,13 +193,13 @@
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
         }
 
-        /* Notes List */
-        #notes-list {
+        /* Tasks List */
+        #tasks-list { /* RENAMED ID */
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 20px; /* Maintained gap */
         }
 
-        .note-card {
+        .task-card { /* RENAMED CLASS */
             background-color: #ffffff;
             border: 1px solid #e0e0e0; /* Lighter border */
             border-radius: 10px; /* Softer corners */
@@ -209,23 +209,35 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            transition: transform 0.2s ease, box-shadow 0.2s ease; /* Smooth hover effect */
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease; /* Smooth hover effect */
         }
 
-        .note-card:hover {
+        .task-card:hover {
             transform: translateY(-5px); /* Lift card on hover */
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15); /* Stronger shadow on hover */
         }
 
-        .note-card h3 {
-            font-size: 1.5em; /* Larger note title */
+        /* Style for completed tasks */
+        .task-card.completed {
+            opacity: 0.7;
+            background-color: #f9f9f9;
+            border-color: #dcdcdc;
+        }
+        .task-card.completed h3,
+        .task-card.completed p {
+            text-decoration: line-through;
+            color: #888;
+        }
+
+        .task-card h3 {
+            font-size: 1.5em; /* Larger task title */
             margin-top: 0;
             margin-bottom: 12px; /* More space below title */
             color: #222; /* Darker for better contrast */
             word-break: break-word; /* Prevents long words from overflowing */
         }
 
-        .note-card p {
+        .task-card p {
             font-size: 1em; /* Standard text size */
             margin-bottom: 15px; /* More space below content */
             color: #444; /* Slightly softer text */
@@ -233,7 +245,7 @@
             overflow-wrap: break-word; /* Ensures text wraps */
         }
 
-        .note-card .meta-info {
+        .task-card .meta-info {
             font-size: 0.85em; /* Slightly larger meta info */
             color: #888; /* Softer color */
             border-top: 1px solid #f0f0f0; /* Lighter separator */
@@ -244,8 +256,15 @@
             align-items: center;
         }
 
-        .delete-note-btn {
-            background-color: #dc3545; /* Bootstrap-like red for delete */
+        .task-actions { /* New div for buttons */
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            justify-content: flex-end; /* Align buttons to the right */
+        }
+
+        .delete-task-btn, .edit-task-btn, .save-task-btn, .cancel-task-btn { /* RENAMED DELETE BUTTON, NEW BUTTONS */
+            background-color: #dc3545; /* Red for delete */
             color: white;
             border: none;
             padding: 6px 10px; /* More padding */
@@ -256,10 +275,28 @@
             transition: background-color 0.2s ease, transform 0.1s ease;
         }
 
-        .delete-note-btn:hover {
-            background-color: #c82333; /* Darker red on hover */
+        .delete-task-btn:hover, .edit-task-btn:hover, .save-task-btn:hover, .cancel-task-btn:hover {
             transform: scale(1.05); /* Slightly enlarge on hover */
         }
+
+        .delete-task-btn:hover { background-color: #c82333; }
+        .edit-task-btn { background-color: #007bff; } /* Blue for edit */
+        .edit-task-btn:hover { background-color: #0056b3; }
+        .save-task-btn { background-color: #28a745; } /* Green for save */
+        .save-task-btn:hover { background-color: #218838; }
+        .cancel-task-btn { background-color: #6c757d; } /* Gray for cancel */
+        .cancel-task-btn:hover { background-color: #5a6268; }
+
+        .task-checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .task-checkbox-container input[type="checkbox"] {
+            transform: scale(1.3); /* Make checkbox larger */
+            cursor: pointer;
+        }
+
 
         /* Back to Home Buttons */
         .back-button-common {
@@ -286,7 +323,7 @@
             #main-app-content {
                 padding: 15px;
             }
-            #notes-list {
+            #tasks-list { /* RENAMED ID */
                 grid-template-columns: 1fr;
             }
             #home-page-options {
@@ -300,10 +337,10 @@
             header h1 {
                 font-size: 1.5em;
             }
-            #add-note-section h2 {
+            #add-task-section h2 { /* RENAMED ID */
                 font-size: 1.5em;
             }
-            .note-card h3 {
+            .task-card h3 { /* RENAMED CLASS */
                 font-size: 1.3em;
             }
         }
@@ -311,35 +348,22 @@
 </head>
 <body>
     <header>
-        <h1>Simple Notes</h1>
-        <div id="user-display">Public Access</div>
+        <h1>Simple Tasks</h1> <div id="user-display">Public Access</div>
     </header>
 
     <div id="main-app-content">
         <div id="home-page-options">
-            <h2>Welcome to your Notes!</h2>
-            <button id="createNoteBtn">Create New Note</button>
-            <button id="viewNotesBtn">View Current Notes</button>
-        </div>
+            <h2>Hello, Notetaker.</h2> <button id="createTaskBtn">Create New Task</button> <button id="viewTasksBtn">View Current Tasks</button> </div>
 
-        <div id="add-note-section">
-            <h2>Add New Note</h2>
-            <form id="addNoteForm">
+        <div id="add-task-section"> <h2>Add New Task</h2> <form id="addTaskForm"> <div class="form-group">
+                    <label for="taskTitle">Task Title:</label> <input type="text" id="taskTitle" required> </div>
                 <div class="form-group">
-                    <label for="noteTitle">Note Title:</label>
-                    <input type="text" id="noteTitle" required>
-                </div>
-                <div class="form-group">
-                    <label for="noteContent">Note Content:</label>
-                    <textarea id="noteContent" rows="5"></textarea>
-                </div>
-                <button type="submit">Add Note</button>
-            </form>
+                    <label for="taskDescription">Task Description:</label> <textarea id="taskDescription" rows="5"></textarea> </div>
+                <button type="submit">Add Task</button> </form>
             <button id="backToHomeFromCreate" class="back-button-common">Back to Options</button>
         </div>
 
-        <div id="notes-list">
-            <button id="backToHomeFromView" class="back-button-common">Back to Options</button>
+        <div id="tasks-list"> <button id="backToHomeFromView" class="back-button-common">Back to Options</button>
         </div>
     </div>
 
@@ -360,19 +384,19 @@
             // Initialize Firebase
             firebase.initializeApp(firebaseConfig);
             const db = firebase.firestore();
-            const notesCollection = db.collection('notes');
+            const tasksCollection = db.collection('tasks'); // RENAMED TO 'tasks' COLLECTION!
 
-            let allNotesData = [];
+            let allTasksData = []; // RENAMED
 
             // --- 2. Global Variables & DOM Elements ---
             const homePageOptions = document.getElementById('home-page-options');
-            const createNoteBtn = document.getElementById('createNoteBtn');
-            const viewNotesBtn = document.getElementById('viewNotesBtn');
-            const addNoteSection = document.getElementById('add-note-section');
-            const addNoteForm = document.getElementById('addNoteForm');
-            const noteTitleInput = document.getElementById('noteTitle');
-            const noteContentInput = document.getElementById('noteContent');
-            const notesListDiv = document.getElementById('notes-list');
+            const createTaskBtn = document.getElementById('createTaskBtn'); // RENAMED
+            const viewTasksBtn = document.getElementById('viewTasksBtn');   // RENAMED
+            const addTaskSection = document.getElementById('add-task-section'); // RENAMED
+            const addTaskForm = document.getElementById('addTaskForm');     // RENAMED
+            const taskTitleInput = document.getElementById('taskTitle');    // RENAMED
+            const taskDescriptionInput = document.getElementById('taskDescription'); // RENAMED
+            const tasksListDiv = document.getElementById('tasks-list');     // RENAMED
             const userDisplay = document.getElementById('user-display');
 
             const backToHomeFromCreateBtn = document.getElementById('backToHomeFromCreate');
@@ -390,85 +414,123 @@
                 return 'N/A';
             }
 
-            function renderNotes(notesToRender) {
-                notesListDiv.innerHTML = ''; // Clear existing notes
-                // Append the back-to-home button for the notes list first
-                notesListDiv.appendChild(backToHomeFromViewBtn);
+            function renderTasks(tasksToRender) { // RENAMED
+                tasksListDiv.innerHTML = ''; // Clear existing tasks
+                tasksListDiv.appendChild(backToHomeFromViewBtn); // Re-append the back button
 
 
-                notesToRender.forEach(note => {
-                    const noteCard = document.createElement('div');
-                    noteCard.className = `note-card`;
-                    noteCard.dataset.id = note.id;
+                tasksToRender.forEach(task => { // RENAMED
+                    const taskCard = document.createElement('div');
+                    taskCard.className = `task-card ${task.completed ? 'completed' : ''}`; // Apply 'completed' class
+                    taskCard.dataset.id = task.id;
 
-                    noteCard.innerHTML = `
-                        <h3>${note.title}</h3>
-                        <p>${note.content ? note.content.replace(/\n/g, '<br>') : 'No content'}</p>
+                    taskCard.innerHTML = `
+                        <div class="task-content">
+                            <h3>${task.title}</h3>
+                            <p>${task.description ? task.description.replace(/\n/g, '<br>') : 'No description'}</p>
+                        </div>
                         <div class="meta-info">
-                            <span>Created: ${formatTimestamp(note.createdAt)}</span>
-                            <button class="delete-note-btn" data-id="${note.id}">Delete</button>
+                            <div class="task-checkbox-container">
+                                <input type="checkbox" class="task-complete-checkbox" data-id="${task.id}" ${task.completed ? 'checked' : ''}>
+                                <span>Completed</span>
+                            </div>
+                            <span>Created: ${formatTimestamp(task.createdAt)}</span>
+                        </div>
+                        <div class="task-actions">
+                            <button class="edit-task-btn" data-id="${task.id}">Edit</button>
+                            <button class="delete-task-btn" data-id="${task.id}">Delete</button>
                         </div>
                     `;
-                    // Insert note cards *before* the back button if you want the button always at the bottom
-                    notesListDiv.insertBefore(noteCard, backToHomeFromViewBtn);
+
+                    // Insert task cards *before* the back button
+                    tasksListDiv.insertBefore(taskCard, backToHomeFromViewBtn);
                 });
 
+                // Re-attach listeners after rendering
                 addDeleteButtonListeners();
+                addEditButtonListeners(); // NEW
+                addCompleteCheckboxListeners(); // NEW
             }
 
 
             // --- 4. Firebase Operations ---
-            async function addNote(noteData) {
+            async function addTask(taskData) { // RENAMED
                 try {
-                    await notesCollection.add({
-                        title: noteData.title,
-                        content: noteData.content,
+                    await tasksCollection.add({
+                        title: taskData.title,
+                        description: taskData.description, // RENAMED FIELD
+                        completed: false, // NEW FIELD: Default to not completed
                         createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                     });
-                    addNoteForm.reset();
-                    noteTitleInput.focus();
-                    alert("Note added successfully!");
+                    addTaskForm.reset();
+                    taskTitleInput.focus();
+                    alert("Task added successfully!");
                 } catch (e) {
                     console.error("Error adding document: ", e);
-                    alert("Error adding note. Please try again.");
+                    alert("Error adding task. Please try again.");
                 }
             }
 
-            async function deleteNote(id) {
-                if (!confirm("Are you sure you want to delete this note?")) {
+            async function deleteTask(id) { // RENAMED
+                if (!confirm("Are you sure you want to delete this task?")) {
                     return;
                 }
                 try {
-                    await notesCollection.doc(id).delete();
+                    await tasksCollection.doc(id).delete();
                 } catch (e) {
                     console.error("Error removing document: ", e);
-                    alert("Error deleting note. Please try again.");
+                    alert("Error deleting task. Please try again.");
                 }
             }
+
+            async function toggleTaskComplete(id, currentStatus) { // NEW FUNCTION
+                try {
+                    await tasksCollection.doc(id).update({
+                        completed: !currentStatus
+                    });
+                } catch (e) {
+                    console.error("Error toggling task status: ", e);
+                    alert("Error updating task status. Please try again.");
+                }
+            }
+
+            async function updateTask(id, newTitle, newDescription) { // NEW FUNCTION
+                try {
+                    await tasksCollection.doc(id).update({
+                        title: newTitle,
+                        description: newDescription
+                    });
+                    alert("Task updated successfully!");
+                } catch (e) {
+                    console.error("Error updating task: ", e);
+                    alert("Error updating task. Please try again.");
+                }
+            }
+
 
             // --- 5. Navigation Functions ---
             function showSection(sectionToShow) {
                 // Hide all main sections first
                 homePageOptions.classList.remove('active');
-                addNoteSection.classList.remove('active');
-                notesListDiv.classList.remove('active');
+                addTaskSection.classList.remove('active'); // RENAMED
+                tasksListDiv.classList.remove('active');    // RENAMED
 
                 homePageOptions.style.display = 'none';
-                addNoteSection.style.display = 'none';
-                notesListDiv.style.display = 'none';
+                addTaskSection.style.display = 'none';     // RENAMED
+                tasksListDiv.style.display = 'none';       // RENAMED
 
                 // Then show the requested section with animation
                 if (sectionToShow === homePageOptions) {
                     homePageOptions.style.display = 'flex'; // Home is flex
-                } else if (sectionToShow === addNoteSection) {
-                    addNoteSection.style.display = 'block'; // Form is block
-                    noteTitleInput.focus();
-                } else if (sectionToShow === notesListDiv) {
-                    notesListDiv.style.display = 'grid'; // Notes list is grid
+                } else if (sectionToShow === addTaskSection) { // RENAMED
+                    addTaskSection.style.display = 'block'; // Form is block
+                    taskTitleInput.focus();
+                } else if (sectionToShow === tasksListDiv) { // RENAMED
+                    tasksListDiv.style.display = 'grid'; // Tasks list is grid
                 }
 
                 // Trigger animation
-                setTimeout(() => { // Small delay to ensure display change takes effect before adding active class
+                setTimeout(() => {
                     sectionToShow.classList.add('active');
                 }, 50);
             }
@@ -479,46 +541,125 @@
             // Initial view
             showSection(homePageOptions);
 
-            createNoteBtn.addEventListener('click', () => showSection(addNoteSection));
-            viewNotesBtn.addEventListener('click', () => showSection(notesListDiv));
+            createTaskBtn.addEventListener('click', () => showSection(addTaskSection)); // RENAMED
+            viewTasksBtn.addEventListener('click', () => showSection(tasksListDiv));   // RENAMED
 
             backToHomeFromCreateBtn.addEventListener('click', () => showSection(homePageOptions));
             backToHomeFromViewBtn.addEventListener('click', () => showSection(homePageOptions));
 
 
-            addNoteForm.addEventListener('submit', async (e) => {
+            addTaskForm.addEventListener('submit', async (e) => { // RENAMED
                 e.preventDefault();
-                const newNote = {
-                    title: noteTitleInput.value.trim(),
-                    content: noteContentInput.value.trim() || ''
+                const newtask = { // RENAMED
+                    title: taskTitleInput.value.trim(),
+                    description: taskDescriptionInput.value.trim() || '' // RENAMED FIELD
                 };
 
-                if (newNote.title) {
-                    await addNote(newNote);
+                if (newtask.title) {
+                    await addTask(newtask); // RENAMED
                 } else {
-                    alert("Note title is required!");
+                    alert("Task title is required!");
                 }
             });
 
             function addDeleteButtonListeners() {
-                document.querySelectorAll('.delete-note-btn').forEach(button => {
+                document.querySelectorAll('.delete-task-btn').forEach(button => { // RENAMED
                     button.onclick = async (e) => {
-                        const noteId = e.target.dataset.id;
-                        await deleteNote(noteId);
+                        const taskId = e.target.dataset.id; // RENAMED
+                        await deleteTask(taskId); // RENAMED
+                    };
+                });
+            }
+
+            function addCompleteCheckboxListeners() { // NEW FUNCTION
+                document.querySelectorAll('.task-complete-checkbox').forEach(checkbox => {
+                    checkbox.onchange = async (e) => {
+                        const taskId = e.target.dataset.id;
+                        const isCompleted = e.target.checked;
+                        await toggleTaskComplete(taskId, !isCompleted); // Pass current status, toggle it
+                    };
+                });
+            }
+
+            function addEditButtonListeners() { // NEW FUNCTION
+                document.querySelectorAll('.edit-task-btn').forEach(button => {
+                    button.onclick = async (e) => {
+                        const taskId = e.target.dataset.id;
+                        const taskCard = e.target.closest('.task-card');
+                        const currentTask = allTasksData.find(t => t.id === taskId); // Find current task data
+
+                        if (!currentTask) return; // Should not happen
+
+                        // Replace H3 with input
+                        const titleEl = taskCard.querySelector('h3');
+                        const originalTitle = titleEl.textContent;
+                        titleEl.innerHTML = `<input type="text" class="edit-title-input" value="${originalTitle.replace(/"/g, '&quot;')}" style="width:100%; padding: 8px; font-size: 1.2em; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">`; // Escape quotes
+
+                        // Replace P with textarea
+                        const descriptionEl = taskCard.querySelector('p');
+                        const originalDescription = descriptionEl.textContent;
+                        descriptionEl.innerHTML = `<textarea class="edit-description-textarea" rows="4" style="width:100%; padding: 8px; font-size: 0.95em; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box;">${originalDescription.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</textarea>`; // Escape HTML
+
+                        // Hide original action buttons
+                        taskCard.querySelector('.task-actions').style.display = 'none';
+                        taskCard.querySelector('.meta-info').style.display = 'none';
+
+
+                        // Create and append Save/Cancel buttons
+                        const saveButton = document.createElement('button');
+                        saveButton.className = 'save-task-btn';
+                        saveButton.textContent = 'Save';
+                        saveButton.dataset.id = taskId;
+
+                        const cancelButton = document.createElement('button');
+                        cancelButton.className = 'cancel-task-btn';
+                        cancelButton.textContent = 'Cancel';
+                        cancelButton.dataset.id = taskId; // Use task ID for cancel too
+
+                        const editControlsDiv = document.createElement('div');
+                        editControlsDiv.className = 'task-actions edit-mode-controls'; // Re-use task-actions style, add edit-mode-controls
+                        editControlsDiv.appendChild(saveButton);
+                        editControlsDiv.appendChild(cancelButton);
+                        taskCard.appendChild(editControlsDiv);
+
+                        // Event Listeners for Save/Cancel
+                        saveButton.onclick = async () => {
+                            const newTitle = taskCard.querySelector('.edit-title-input').value.trim();
+                            const newDescription = taskCard.querySelector('.edit-description-textarea').value.trim();
+
+                            if (newTitle) {
+                                await updateTask(taskId, newTitle, newDescription);
+                            } else {
+                                alert("Task title cannot be empty!");
+                            }
+                            // Firestore listener will re-render, effectively refreshing the card
+                            // If not using real-time, you'd manually revert or re-render this card.
+                            // For now, rely on snapshot listener.
+                        };
+
+                        cancelButton.onclick = () => {
+                            // Firestore listener will re-render and fix it automatically if changes
+                            // If no changes were made to the text, simply remove the controls.
+                            // If user typed something and canceled, the next snapshot will revert it.
+                            taskCard.querySelector('.edit-mode-controls').remove();
+                            taskCard.querySelector('.task-actions').style.display = 'flex'; // Show original
+                            taskCard.querySelector('.meta-info').style.display = 'flex';
+                            renderTasks(allTasksData); // Re-render to revert current state
+                        };
                     };
                 });
             }
 
 
             // --- 7. Real-time Firebase Listener ---
-            notesCollection.orderBy('createdAt', 'desc').onSnapshot(snapshot => {
-                allNotesData = snapshot.docs.map(doc => ({
+            tasksCollection.orderBy('createdAt', 'desc').onSnapshot(snapshot => { // RENAMED COLLECTION
+                allTasksData = snapshot.docs.map(doc => ({ // RENAMED
                     id: doc.id,
                     ...doc.data()
                 }));
-                renderNotes(allNotesData);
+                renderTasks(allTasksData); // RENAMED
             }, error => {
-                console.error("Error listening to notes:", error);
+                console.error("Error listening to tasks:", error); // RENAMED
                 if (error.code === 'permission-denied') {
                     alert("Permission Denied: Check your Firebase Firestore security rules!");
                 }
