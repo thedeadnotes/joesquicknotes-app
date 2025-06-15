@@ -52,6 +52,41 @@
             box-sizing: border-box;
         }
 
+        /* --- NEW STYLES FOR INTERACTIVE HOME PAGE --- */
+        #home-page-options {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            padding: 50px 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            text-align: center;
+        }
+
+        #home-page-options button {
+            width: 250px;
+            padding: 15px 25px;
+            font-size: 1.2em;
+            background-color: #008080; /* Deep Teal */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        #home-page-options button:hover {
+            background-color: #005050; /* Darker Teal */
+        }
+
+        /* Initially hide these sections */
+        #add-note-section, #notes-list {
+            display: none;
+        }
+        /* --- END NEW STYLES --- */
+
         #add-note-section {
             background-color: #fff;
             padding: 20px;
@@ -102,7 +137,7 @@
         }
 
         #notes-list {
-            display: grid;
+            display: grid; /* Keep as grid for notes display */
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 20px;
         }
@@ -167,6 +202,9 @@
             #notes-list {
                 grid-template-columns: 1fr;
             }
+            #home-page-options button {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -177,6 +215,12 @@
     </header>
 
     <div id="main-app-content">
+        <div id="home-page-options">
+            <h2>Welcome to your Notes!</h2>
+            <button id="createNoteBtn">Create New Note</button>
+            <button id="viewNotesBtn">View Current Notes</button>
+        </div>
+
         <div id="add-note-section">
             <h2>Add New Note</h2>
             <form id="addNoteForm">
@@ -190,69 +234,73 @@
                 </div>
                 <button type="submit">Add Note</button>
             </form>
+            <button id="backToHomeFromCreate" style="background-color: #6c757d; margin-top: 15px;">Back to Options</button>
         </div>
 
         <div id="notes-list">
-            </div>
+            <button id="backToHomeFromView" style="background-color: #6c757d; margin-top: 15px;">Back to Options</button>
+        </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
 
             // --- 1. Firebase Configuration ---
-            // IMPORTANT: PASTE YOUR FIREBASE CONFIG OBJECT HERE from your Firebase Console Project Settings page.
-            // This is the SAME config you had before, or a new one from a fresh project.
-            // FOR "NOT SECURE AT ALL" - you MUST ALSO SET YOUR FIRESTORE RULES TO ALLOW PUBLIC READ/WRITE.
-            // In Firebase Console -> Firestore Database -> Rules, set:
-            /*
-            rules_version = '2';
-            service cloud.firestore {
-              match /databases/{database}/documents {
-                match /{document=**} {
-                  allow read, write: if true; // DANGER! Anyone can read/write! Use only for testing.
-                }
-              }
-            }
-            */
             const firebaseConfig = {
-  apiKey: "AIzaSyAddn3_6GWdQ8oeQl2-H1MfKyHrwUVh70Y",
-  authDomain: "joesquicknotes.firebaseapp.com",
-  projectId: "joesquicknotes",
-  storageBucket: "joesquicknotes.firebasestorage.app",
-  messagingSenderId: "903482150331",
-  appId: "1:903482150331:web:609caf78b6fd54e094489e",
-  measurementId: "G-J1K97GXPFR"
-};
+                apiKey: "AIzaSyAddn3_6GWdQ8oeQl2-H1MfKyHrwUVh70Y",
+                authDomain: "joesquicknotes.firebaseapp.com",
+                projectId: "joesquicknotes",
+                storageBucket: "joesquicknotes.firebasestorage.app",
+                messagingSenderId: "903482150331",
+                appId: "1:903482150331:web:609caf78b6fd54e094489e",
+                measurementId: "G-J1K97GXPFR"
+            };
 
             // Initialize Firebase
             firebase.initializeApp(firebaseConfig);
             const db = firebase.firestore();
-            const notesCollection = db.collection('notes'); // Using a 'notes' collection
+            const notesCollection = db.collection('notes');
 
-            let allNotesData = []; // Stores all notes fetched from Firestore
+            let allNotesData = [];
 
             // --- 2. Global Variables & DOM Elements ---
+            const homePageOptions = document.getElementById('home-page-options');
+            const createNoteBtn = document.getElementById('createNoteBtn');
+            const viewNotesBtn = document.getElementById('viewNotesBtn');
+            const addNoteSection = document.getElementById('add-note-section');
             const addNoteForm = document.getElementById('addNoteForm');
             const noteTitleInput = document.getElementById('noteTitle');
             const noteContentInput = document.getElementById('noteContent');
             const notesListDiv = document.getElementById('notes-list');
-            const userDisplay = document.getElementById('user-display'); // Will just say "Public Access"
+            const userDisplay = document.getElementById('user-display');
+
+            const backToHomeFromCreateBtn = document.getElementById('backToHomeFromCreate');
+            const backToHomeFromViewBtn = document.getElementById('backToHomeFromView');
 
 
             // --- 3. Helper Functions ---
             function formatTimestamp(timestamp) {
-                if (timestamp && timestamp.toDate) { // Firestore timestamp object
+                if (timestamp && timestamp.toDate) {
                     return timestamp.toDate().toLocaleString();
                 }
-                if (timestamp instanceof Date) { // JavaScript Date object
+                if (timestamp instanceof Date) {
                     return timestamp.toLocaleString();
                 }
-                return 'N/A'; // Fallback
+                return 'N/A';
             }
 
-            // Function to render notes
             function renderNotes(notesToRender) {
-                notesListDiv.innerHTML = ''; // Clear all
+                notesListDiv.innerHTML = '';
+                 // Add back to home button only if notes exist or if user specifically navigated here
+                if (notesToRender.length > 0 || notesListDiv.style.display === 'grid') { // Check if notes are being displayed
+                    const backButtonContainer = document.createElement('div');
+                    backButtonContainer.style.textAlign = 'center';
+                    backButtonContainer.style.gridColumn = '1 / -1'; // Span across all columns
+                    backButtonContainer.appendChild(backToHomeFromViewBtn);
+                    notesListDiv.appendChild(backButtonContainer);
+                }
+
+
                 notesToRender.forEach(note => {
                     const noteCard = document.createElement('div');
                     noteCard.className = `note-card`;
@@ -269,12 +317,11 @@
                     notesListDiv.appendChild(noteCard);
                 });
 
-                addDeleteButtonListeners(); // Re-attach listeners after rendering
+                addDeleteButtonListeners();
             }
 
 
             // --- 4. Firebase Operations ---
-
             async function addNote(noteData) {
                 try {
                     await notesCollection.add({
@@ -284,6 +331,7 @@
                     });
                     addNoteForm.reset();
                     noteTitleInput.focus();
+                    alert("Note added successfully!");
                 } catch (e) {
                     console.error("Error adding document: ", e);
                     alert("Error adding note. Please try again.");
@@ -302,8 +350,39 @@
                 }
             }
 
+            // --- 5. Navigation Functions ---
+            function showHomePage() {
+                homePageOptions.style.display = 'flex';
+                addNoteSection.style.display = 'none';
+                notesListDiv.style.display = 'none';
+            }
 
-            // --- 5. Event Listeners ---
+            function showCreateNoteForm() {
+                homePageOptions.style.display = 'none';
+                addNoteSection.style.display = 'block';
+                notesListDiv.style.display = 'none';
+                noteTitleInput.focus(); // Focus on the title input
+            }
+
+            function showNotesList() {
+                homePageOptions.style.display = 'none';
+                addNoteSection.style.display = 'none';
+                notesListDiv.style.display = 'grid'; // Use grid for notes list
+                // Firebase real-time listener will automatically populate
+            }
+
+
+            // --- 6. Event Listeners ---
+
+            // Initial view
+            showHomePage();
+
+            createNoteBtn.addEventListener('click', showCreateNoteForm);
+            viewNotesBtn.addEventListener('click', showNotesList);
+
+            backToHomeFromCreateBtn.addEventListener('click', showHomePage);
+            backToHomeFromViewBtn.addEventListener('click', showHomePage);
+
 
             addNoteForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -319,7 +398,6 @@
                 }
             });
 
-            // Dynamic listeners for elements rendered after page load
             function addDeleteButtonListeners() {
                 document.querySelectorAll('.delete-note-btn').forEach(button => {
                     button.onclick = async (e) => {
@@ -330,14 +408,13 @@
             }
 
 
-            // --- 6. Real-time Firebase Listener ---
-
+            // --- 7. Real-time Firebase Listener ---
             notesCollection.orderBy('createdAt', 'desc').onSnapshot(snapshot => {
                 allNotesData = snapshot.docs.map(doc => ({
                     id: doc.id,
                     ...doc.data()
                 }));
-                renderNotes(allNotesData); // Re-render when data changes
+                renderNotes(allNotesData);
             }, error => {
                 console.error("Error listening to notes:", error);
                 if (error.code === 'permission-denied') {
@@ -345,7 +422,7 @@
                 }
             });
 
-        }); // End of DOMContentLoaded listener
+        });
     </script>
 </body>
 </html>
