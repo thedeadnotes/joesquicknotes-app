@@ -270,7 +270,7 @@
             }
 
 
-            // --- 4. Firebase Operations (UNCHANGED) ---
+            // --- 4. Firebase Operations ---
             async function addTask(taskData) {
                 try {
                     await tasksCollection.add({
@@ -281,7 +281,8 @@
                     });
                     addTaskForm.reset();
                     taskTitleInput.focus();
-                    // Optional: You could show a small toast notification here instead of alert
+                    // Go back to the home page after adding a task
+                    showSection(homePageOptions); 
                 } catch (e) {
                     console.error("Error adding document: ", e);
                     alert("Error adding task. Please try again.");
