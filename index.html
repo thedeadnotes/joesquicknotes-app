@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Homeflow — Household Task Manager</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght0;600&display=swap" rel="stylesheet">
     <style>
         /* Custom font application */
         body { font-family: 'Inter', sans-serif; }
@@ -21,6 +21,10 @@
             opacity: 0;
             transform: translateY(20px);
             transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+            /* Added margin-top to separate from header, but not push too low initially */
+            margin-top: 2rem; /* Adjusted for better initial positioning */
+            width: 100%; /* Ensure it takes full width for max-w-3xl to center */
+            max-width: 48rem; /* Use max-w-3xl (48rem) for consistency with design */
         }
         .section-transition.active {
             opacity: 1;
@@ -42,20 +46,20 @@
     </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
-    <div class="min-h-screen flex flex-col items-center p-6">
+    <div class="min-h-screen flex flex-col items-start p-6 w-full">
         <header class="w-full max-w-3xl mb-10">
             <h1 class="text-4xl font-semibold text-gray-900">🏠 Homeflow</h1>
-            <p class="text-lg text-gray-600 mt-2">The sexy, simple task manager for your home.</p>
+            <p class="text-lg text-gray-600 mt-2">The simple task manager for your home.</p>
         </header>
 
-        <div id="home-page-options" class="w-full max-w-3xl bg-white shadow-xl rounded-2xl p-6 mb-8 flex flex-col items-center gap-6 text-center section-transition">
+        <div id="home-page-options" class="bg-white shadow-xl rounded-2xl p-6 mb-8 flex flex-col items-center gap-6 text-center section-transition max-w-3xl mx-auto">
             <h2 class="text-3xl font-bold text-gray-800 mb-4">Welcome Home!</h2>
             <button id="createTaskBtn" class="bg-indigo-600 text-white px-8 py-4 rounded-xl text-xl hover:bg-indigo-700 transition w-full max-w-sm">Create New Task</button>
             <button id="viewTasksBtn" class="bg-blue-500 text-white px-8 py-4 rounded-xl text-xl hover:bg-blue-600 transition w-full max-w-sm">View Current Tasks</button>
             <button id="viewCompletedTasksBtn" class="bg-green-500 text-white px-8 py-4 rounded-xl text-xl hover:bg-green-600 transition w-full max-w-sm">View Completed Tasks</button>
         </div>
 
-        <section id="add-task-section" class="w-full max-w-3xl bg-white shadow-xl rounded-2xl p-6 mb-8 section-transition hidden">
+        <section id="add-task-section" class="bg-white shadow-xl rounded-2xl p-6 mb-8 section-transition hidden max-w-3xl mx-auto">
             <h2 class="text-2xl font-semibold text-gray-900 mb-6 border-b pb-4">Add New Task</h2>
             <form id="addTaskForm" class="space-y-5">
                 <div>
@@ -82,7 +86,7 @@
             <button id="backToHomeFromCreate" class="mt-8 bg-gray-500 text-white px-5 py-2 rounded-lg text-base hover:bg-gray-600 transition block mx-auto">Back to Home</button>
         </section>
 
-        <section id="tasks-list" class="w-full max-w-3xl section-transition hidden">
+        <section id="tasks-list" class="section-transition hidden max-w-3xl mx-auto">
             <h2 class="text-2xl font-semibold text-gray-900 mb-6 border-b pb-4">Current Tasks</h2>
             <ul class="space-y-4" id="incomplete-tasks-ul">
                 </ul>
@@ -90,7 +94,7 @@
             <button id="backToHomeFromView" class="mt-8 bg-gray-500 text-white px-5 py-2 rounded-lg text-base hover:bg-gray-600 transition block mx-auto">Back to Home</button>
         </section>
 
-        <section id="completed-tasks-list" class="w-full max-w-3xl section-transition hidden">
+        <section id="completed-tasks-list" class="section-transition hidden max-w-3xl mx-auto">
             <h2 class="text-2xl font-semibold text-gray-900 mb-6 border-b pb-4">Completed Tasks</h2>
             <ul class="space-y-4" id="complete-tasks-ul">
                 </ul>
