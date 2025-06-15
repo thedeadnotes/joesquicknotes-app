@@ -3,37 +3,33 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HomeTasks — Household Task Manager</title>
+  <title>HomeTasks</title>
   <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
-  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
   <style> body { font-family: 'Inter', sans-serif; } </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
   <div class="min-h-screen flex flex-col items-center p-6">
-    <!-- Header -->
     <header class="w-full max-w-3xl mb-10 text-center">
       <h1 class="text-4xl font-semibold text-gray-900">🏠 HomeTasks</h1>
       <p class="text-lg text-gray-600 mt-1">Simple task manager for your home.</p>
     </header>
 
-    <!-- Task Input -->
     <section class="w-full max-w-3xl bg-white shadow-xl rounded-2xl p-6 mb-8">
       <div class="flex flex-col gap-4">
-        <input type="text" id="taskTitleInput" placeholder="Task title..." class="border border-gray-300 rounded-xl px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
-        <input type="text" id="taskDescInput" placeholder="Task description..." class="border border-gray-300 rounded-xl px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+        <input type="text" id="taskTitleInput" maxlength="20" placeholder="Task title (max 20 characters)..." class="border border-gray-300 rounded-xl px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
+        <textarea id="taskDescInput" placeholder="Task description..." rows="4" class="border border-gray-300 rounded-xl px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"></textarea>
         <button id="addTask" class="self-start bg-indigo-600 text-white px-6 py-3 rounded-xl text-lg hover:bg-indigo-700 transition">Add</button>
       </div>
     </section>
 
-    <!-- Buttons -->
     <div class="mb-4">
       <button id="toggleCompleted" class="text-indigo-600 hover:underline">View Completed Tasks</button>
     </div>
 
-    <!-- Task List -->
     <section class="w-full max-w-3xl">
       <h2 class="text-xl font-semibold mb-2">Active Tasks</h2>
       <ul id="taskList" class="space-y-4"></ul>
@@ -43,7 +39,6 @@
       </div>
     </section>
 
-    <!-- Footer -->
     <footer class="mt-12 text-sm text-gray-400 text-center">Built with ☕ and TailwindCSS</footer>
   </div>
 
@@ -70,13 +65,12 @@
 
     toggleCompleted.addEventListener('click', () => {
       completedSection.classList.toggle('hidden');
-      toggleCompleted.textContent = completedSection.classList.contains('hidden') ? 'View Completed Tasks' : 'Hide Completed Tasks';
     });
 
     addTaskBtn.addEventListener('click', async () => {
       const title = taskTitleInput.value.trim();
       const description = taskDescInput.value.trim();
-      if (!title) return;
+      if (!title || title.length > 20) return;
       await db.collection('tasks').add({
         title,
         description,
@@ -97,7 +91,7 @@
       snapshot.forEach(doc => {
         const data = doc.data();
         const li = document.createElement('li');
-        li.className = 'flex justify-between items-center bg-white p-4 rounded-xl shadow-sm';
+        li.className = 'flex justify-between items-start bg-white p-4 rounded-xl shadow-sm';
 
         const wrapper = document.createElement('div');
         wrapper.className = 'flex-grow';
@@ -108,25 +102,29 @@
         titleInput.className = 'text-lg font-semibold w-full bg-transparent focus:outline-none';
         titleInput.readOnly = true;
 
-        const descInput = document.createElement('input');
-        descInput.type = 'text';
+        const descInput = document.createElement('textarea');
         descInput.value = data.description || '';
-        descInput.className = 'text-sm text-gray-600 w-full bg-transparent focus:outline-none';
+        descInput.rows = 3;
+        descInput.className = 'text-sm text-gray-600 w-full bg-transparent focus:outline-none resize-none mt-1';
         descInput.readOnly = true;
 
         const timeInfo = document.createElement('p');
         timeInfo.className = 'text-sm text-gray-400 mt-1';
-        timeInfo.innerText = data.done
-          ? `Completed on ${data.completedAt?.toDate().toLocaleString() || ''}`
-          : `Created on ${data.createdAt?.toDate().toLocaleString() || ''}`;
+        if (data.done) {
+          const date = data.completedAt?.toDate().toLocaleString() || '';
+          timeInfo.innerText = `Completed on ${date}`;
+        } else {
+          const date = data.createdAt?.toDate().toLocaleString() || '';
+          timeInfo.innerText = `Created on ${date}`;
+        }
 
         wrapper.append(titleInput, descInput, timeInfo);
 
         const rightControls = document.createElement('div');
-        rightControls.className = 'flex items-center space-x-4';
+        rightControls.className = 'flex flex-col items-center gap-2 ml-4';
 
         const editBtn = document.createElement('button');
-        editBtn.innerHTML = '<i data-lucide="pencil" class="text-blue-600 hover:text-blue-800 transition"></i>';
+        editBtn.innerHTML = '<i data-lucide="pencil" class="w-5 h-5 text-blue-600 hover:text-blue-800"></i>';
         editBtn.addEventListener('click', () => {
           titleInput.readOnly = false;
           descInput.readOnly = false;
@@ -142,7 +140,7 @@
         });
 
         const deleteBtn = document.createElement('button');
-        deleteBtn.innerHTML = '<i data-lucide="trash" class="text-red-500 hover:text-red-700 transition"></i>';
+        deleteBtn.innerHTML = '<i data-lucide="trash" class="w-5 h-5 text-red-500 hover:text-red-700"></i>';
         deleteBtn.addEventListener('click', async () => {
           await db.collection('tasks').doc(doc.id).delete();
           loadTasks();
@@ -150,7 +148,8 @@
 
         if (!data.done) {
           const completeBtn = document.createElement('button');
-          completeBtn.innerHTML = '<i data-lucide="check-circle" class="text-green-500 hover:text-green-700 transition"></i>';
+          completeBtn.innerHTML = '<i data-lucide="check-circle" class="w-5 h-5 text-green-500 hover:text-green-700"></i>';
+          completeBtn.title = "Mark as done";
           completeBtn.addEventListener('click', async () => {
             await db.collection('tasks').doc(doc.id).update({
               done: true,
@@ -158,13 +157,12 @@
             });
             loadTasks();
           });
-          rightControls.append(editBtn, deleteBtn, completeBtn);
-        } else {
-          rightControls.append(editBtn, deleteBtn);
+          rightControls.append(completeBtn);
         }
 
+        rightControls.append(editBtn, deleteBtn);
         li.append(wrapper, rightControls);
-        (data.done ? completedList : taskList).appendChild(li);
+        data.done ? completedList.appendChild(li) : taskList.appendChild(li);
       });
 
       lucide.createIcons();
