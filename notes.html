@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Real-time Note App</title>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background-color: #f4f7f6;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            background-color: #6200EE; /* Purple */
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 1.8em;
+        }
+
+        #user-display {
+            margin-right: 15px;
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        #main-app-content {
+            flex-grow: 1;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            max-width: 900px;
+            margin: 20px auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        #add-note-section {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        #add-note-section h2 {
+            margin-top: 0;
+            color: #6200EE;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .form-group input[type="text"],
+        .form-group textarea {
+            width: calc(100% - 20px);
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1em;
+        }
+
+        button[type="submit"] {
+            background-color: #6200EE;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s ease;
+        }
+
+        button[type="submit"]:hover {
+            background-color: #3700B3;
+        }
+
+        #notes-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .note-card {
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .note-card h3 {
+            font-size: 1.3em;
+            margin-top: 0;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .note-card p {
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            color: #555;
+            flex-grow: 1; /* Allows content to push footer down */
+        }
+
+        .note-card .meta-info {
+            font-size: 0.8em;
+            color: #777;
+            border-top: 1px solid #eee;
+            padding-top: 8px;
+            margin-top: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .delete-note-btn {
+            background-color: #ff5252; /* Red */
+            color: white;
+            border: none;
+            padding: 5px 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8em;
+            line-height: 1;
+            transition: background-color 0.2s ease;
+        }
+
+        .delete-note-btn:hover {
+            background-color: #e00000;
+        }
+
+        @media (max-width: 768px) {
+            #main-app-content {
+                padding: 10px;
+            }
+            #notes-list {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Simple Notes</h1>
+        <div id="user-display">Public Access</div>
+    </header>
+
+    <div id="main-app-content">
+        <div id="add-note-section">
+            <h2>Add New Note</h2>
+            <form id="addNoteForm">
+                <div class="form-group">
+                    <label for="noteTitle">Note Title:</label>
+                    <input type="text" id="noteTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="noteContent">Note Content:</label>
+                    <textarea id="noteContent" rows="5"></textarea>
+                </div>
+                <button type="submit">Add Note</button>
+            </form>
+        </div>
+
+        <div id="notes-list">
+            </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // --- 1. Firebase Configuration ---
+            // IMPORTANT: PASTE YOUR FIREBASE CONFIG OBJECT HERE from your Firebase Console Project Settings page.
+            // This is the SAME config you had before, or a new one from a fresh project.
+            // FOR "NOT SECURE AT ALL" - you MUST ALSO SET YOUR FIRESTORE RULES TO ALLOW PUBLIC READ/WRITE.
+            // In Firebase Console -> Firestore Database -> Rules, set:
+            /*
+            rules_version = '2';
+            service cloud.firestore {
+              match /databases/{database}/documents {
+                match /{document=**} {
+                  allow read, write: if true; // DANGER! Anyone can read/write! Use only for testing.
+                }
+              }
+            }
+            */
+            const firebaseConfig = {
+  apiKey: "AIzaSyAddn3_6GWdQ8oeQl2-H1MfKyHrwUVh70Y",
+  authDomain: "joesquicknotes.firebaseapp.com",
+  projectId: "joesquicknotes",
+  storageBucket: "joesquicknotes.firebasestorage.app",
+  messagingSenderId: "903482150331",
+  appId: "1:903482150331:web:609caf78b6fd54e094489e",
+  measurementId: "G-J1K97GXPFR"
+};
+
+            // Initialize Firebase
+            firebase.initializeApp(firebaseConfig);
+            const db = firebase.firestore();
+            const notesCollection = db.collection('notes'); // Using a 'notes' collection
+
+            let allNotesData = []; // Stores all notes fetched from Firestore
+
+            // --- 2. Global Variables & DOM Elements ---
+            const addNoteForm = document.getElementById('addNoteForm');
+            const noteTitleInput = document.getElementById('noteTitle');
+            const noteContentInput = document.getElementById('noteContent');
+            const notesListDiv = document.getElementById('notes-list');
+            const userDisplay = document.getElementById('user-display'); // Will just say "Public Access"
+
+
+            // --- 3. Helper Functions ---
+            function formatTimestamp(timestamp) {
+                if (timestamp && timestamp.toDate) { // Firestore timestamp object
+                    return timestamp.toDate().toLocaleString();
+                }
+                if (timestamp instanceof Date) { // JavaScript Date object
+                    return timestamp.toLocaleString();
+                }
+                return 'N/A'; // Fallback
+            }
+
+            // Function to render notes
+            function renderNotes(notesToRender) {
+                notesListDiv.innerHTML = ''; // Clear all
+                notesToRender.forEach(note => {
+                    const noteCard = document.createElement('div');
+                    noteCard.className = `note-card`;
+                    noteCard.dataset.id = note.id;
+
+                    noteCard.innerHTML = `
+                        <h3>${note.title}</h3>
+                        <p>${note.content ? note.content.replace(/\n/g, '<br>') : 'No content'}</p>
+                        <div class="meta-info">
+                            <span>Created: ${formatTimestamp(note.createdAt)}</span>
+                            <button class="delete-note-btn" data-id="${note.id}">Delete</button>
+                        </div>
+                    `;
+                    notesListDiv.appendChild(noteCard);
+                });
+
+                addDeleteButtonListeners(); // Re-attach listeners after rendering
+            }
+
+
+            // --- 4. Firebase Operations ---
+
+            async function addNote(noteData) {
+                try {
+                    await notesCollection.add({
+                        title: noteData.title,
+                        content: noteData.content,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    });
+                    addNoteForm.reset();
+                    noteTitleInput.focus();
+                } catch (e) {
+                    console.error("Error adding document: ", e);
+                    alert("Error adding note. Please try again.");
+                }
+            }
+
+            async function deleteNote(id) {
+                if (!confirm("Are you sure you want to delete this note?")) {
+                    return;
+                }
+                try {
+                    await notesCollection.doc(id).delete();
+                } catch (e) {
+                    console.error("Error removing document: ", e);
+                    alert("Error deleting note. Please try again.");
+                }
+            }
+
+
+            // --- 5. Event Listeners ---
+
+            addNoteForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const newNote = {
+                    title: noteTitleInput.value.trim(),
+                    content: noteContentInput.value.trim() || ''
+                };
+
+                if (newNote.title) {
+                    await addNote(newNote);
+                } else {
+                    alert("Note title is required!");
+                }
+            });
+
+            // Dynamic listeners for elements rendered after page load
+            function addDeleteButtonListeners() {
+                document.querySelectorAll('.delete-note-btn').forEach(button => {
+                    button.onclick = async (e) => {
+                        const noteId = e.target.dataset.id;
+                        await deleteNote(noteId);
+                    };
+                });
+            }
+
+
+            // --- 6. Real-time Firebase Listener ---
+
+            notesCollection.orderBy('createdAt', 'desc').onSnapshot(snapshot => {
+                allNotesData = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    ...doc.data()
+                }));
+                renderNotes(allNotesData); // Re-render when data changes
+            }, error => {
+                console.error("Error listening to notes:", error);
+                if (error.code === 'permission-denied') {
+                    alert("Permission Denied: Check your Firebase Firestore security rules!");
+                }
+            });
+
+        }); // End of DOMContentLoaded listener
+    </script>
+</body>
+</html>
