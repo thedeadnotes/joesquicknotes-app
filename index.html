@@ -1,63 +1,22 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HomeTasks</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <style> body { font-family: 'Inter', sans-serif; } </style>
-</head>
-<body class="bg-gray-100 text-gray-800">
+  <meta charset="UTF-8">
+  <title>JoesQuickNotes</title>
+  <script type="module">
+    // Import Firebase
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-  <div id="authSection" class="min-h-screen flex flex-col items-center justify-center p-6">
-    <h1 class="text-4xl font-semibold text-gray-900 mb-6">🏠 HomeTasks</h1>
-    <button id="signInBtn" class="bg-indigo-600 text-white px-6 py-3 rounded-xl text-lg hover:bg-indigo-700 transition">
-      Sign in with Google
-    </button>
-  </div>
-
-  <div id="appSection" class="hidden min-h-screen flex flex-col items-center p-6">
-    <header class="w-full max-w-3xl mb-10 text-center">
-      <h1 class="text-4xl font-semibold text-gray-900">🏠 HomeTasks</h1>
-      <p class="text-lg text-gray-600 mt-1">Simple task manager for your home.</p>
-      <button id="signOutBtn" class="mt-4 text-red-600 hover:underline">Sign Out</button>
-    </header>
-
-    <section class="w-full max-w-3xl bg-white shadow-xl rounded-2xl p-6 mb-8">
-      <div class="flex flex-col gap-4">
-        <input type="text" id="taskTitleInput" maxlength="20" placeholder="Task title (max 20 characters)..." class="border border-gray-300 rounded-xl px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
-        <textarea id="taskDescInput" placeholder="Task description..." rows="4" class="border border-gray-300 rounded-xl px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"></textarea>
-        <button id="addTask" class="self-start bg-indigo-600 text-white px-6 py-3 rounded-xl text-lg hover:bg-indigo-700 transition">Add</button>
-      </div>
-    </section>
-
-    <div class="mb-4">
-      <button id="toggleCompleted" class="text-indigo-600 hover:underline">View Completed Tasks</button>
-    </div>
-
-    <section class="w-full max-w-3xl">
-      <div id="activeSection">
-        <h2 class="text-xl font-semibold mb-2">Active Tasks</h2>
-        <ul id="taskList" class="space-y-4"></ul>
-      </div>
-      <div id="completedSection" class="hidden">
-        <h2 class="text-xl font-semibold mb-2">Completed Tasks</h2>
-        <ul id="completedList" class="space-y-4"></ul>
-      </div>
-    </section>
-
-    <footer class="mt-12 text-sm text-gray-400 text-center">Built with ☕ and TailwindCSS</footer>
-  </div>
-
-  <script>
-    // Firebase config
+    // Your Firebase config
     const firebaseConfig = {
-      apiKey: "AIzaSyBZ-2lO6sXV9V8qe4u1iP6brci5o-OQOFE",
+      apiKey: "AIzaSyCQ48aLOvbPkfCXuoyWtZBUPtvDLefT4Dg",
       authDomain: "joesquicknotes.firebaseapp.com",
       projectId: "joesquicknotes",
       storageBucket: "joesquicknotes.firebasestorage.app",
@@ -66,174 +25,61 @@
       measurementId: "G-J1K97GXPFR"
     };
 
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.firestore();
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
 
-    // DOM elements
-    const authSection = document.getElementById('authSection');
-    const appSection = document.getElementById('appSection');
-    const signInBtn = document.getElementById('signInBtn');
-    const signOutBtn = document.getElementById('signOutBtn');
-    const taskTitleInput = document.getElementById('taskTitleInput');
-    const taskDescInput = document.getElementById('taskDescInput');
-    const addTaskBtn = document.getElementById('addTask');
-    const taskList = document.getElementById('taskList');
-    const completedList = document.getElementById('completedList');
-    const completedSection = document.getElementById('completedSection');
-    const activeSection = document.getElementById('activeSection');
-    const toggleCompleted = document.getElementById('toggleCompleted');
-
-    // Show or hide UI based on auth state
-    function updateUI(user) {
+    // Show/hide UI based on login state
+    onAuthStateChanged(auth, user => {
       if (user) {
-        authSection.classList.add('hidden');
-        appSection.classList.remove('hidden');
-        loadTasks();
+        document.getElementById("auth-section").style.display = "none";
+        document.getElementById("app-section").style.display = "block";
       } else {
-        authSection.classList.remove('hidden');
-        appSection.classList.add('hidden');
+        document.getElementById("auth-section").style.display = "block";
+        document.getElementById("app-section").style.display = "none";
       }
-    }
-
-    // Sign in with redirect
-    signInBtn.addEventListener('click', () => {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      auth.signInWithRedirect(provider);
     });
+
+    // Sign up
+    window.signUp = async () => {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      try {
+        await createUserWithEmailAndPassword(auth, email, password);
+      } catch (error) {
+        alert(error.message);
+      }
+    };
+
+    // Sign in
+    window.signIn = async () => {
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+      } catch (error) {
+        alert(error.message);
+      }
+    };
 
     // Sign out
-    signOutBtn.addEventListener('click', () => {
-      auth.signOut();
-    });
-
-    // Handle redirect result after sign-in
-    auth.getRedirectResult()
-      .then((result) => {
-        if (result.user) {
-          updateUI(result.user);
-        }
-      })
-      .catch((error) => {
-        console.error("Sign-in redirect error:", error);
-      });
-
-    // Listen for auth state changes
-    auth.onAuthStateChanged(user => {
-      updateUI(user);
-    });
-
-    // Toggle completed tasks visibility
-    toggleCompleted.addEventListener('click', () => {
-      const showingCompleted = completedSection.classList.contains('hidden');
-      completedSection.classList.toggle('hidden');
-      activeSection.classList.toggle('hidden');
-      toggleCompleted.innerText = showingCompleted ? 'View Active Tasks' : 'View Completed Tasks';
-    });
-
-    // Add task
-    addTaskBtn.addEventListener('click', async () => {
-      const title = taskTitleInput.value.trim();
-      const description = taskDescInput.value.trim();
-      if (!title || title.length > 20) return;
-      await db.collection('tasks').add({
-        title,
-        description,
-        createdAt: new Date(),
-        done: false
-      });
-      taskTitleInput.value = '';
-      taskDescInput.value = '';
-      loadTasks();
-    });
-
-    // Load tasks from Firestore
-    async function loadTasks() {
-      taskList.innerHTML = '';
-      completedList.innerHTML = '';
-
-      const snapshot = await db.collection('tasks').orderBy('createdAt', 'desc').get();
-
-      snapshot.forEach(doc => {
-        const data = doc.data();
-        const li = document.createElement('li');
-        li.className = 'flex justify-between items-start bg-white p-4 rounded-xl shadow-sm';
-
-        const wrapper = document.createElement('div');
-        wrapper.className = 'flex-grow';
-
-        const titleInput = document.createElement('input');
-        titleInput.type = 'text';
-        titleInput.value = data.title;
-        titleInput.className = 'text-lg font-semibold w-full bg-transparent focus:outline-none';
-        titleInput.readOnly = true;
-
-        const descInput = document.createElement('textarea');
-        descInput.value = data.description || '';
-        descInput.rows = 3;
-        descInput.className = 'text-sm text-gray-600 w-full bg-transparent focus:outline-none resize-none mt-1';
-        descInput.readOnly = true;
-
-        const timeInfo = document.createElement('p');
-        timeInfo.className = 'text-sm text-gray-400 mt-1';
-        if (data.done) {
-          const date = data.completedAt?.toDate().toLocaleString() || '';
-          timeInfo.innerText = `Completed on ${date}`;
-        } else {
-          const date = data.createdAt?.toDate().toLocaleString() || '';
-          timeInfo.innerText = `Created on ${date}`;
-        }
-
-        wrapper.append(titleInput, descInput, timeInfo);
-
-        const rightControls = document.createElement('div');
-        rightControls.className = 'flex flex-row gap-2 ml-4';
-
-        const editBtn = document.createElement('button');
-        editBtn.innerHTML = '<i data-lucide="pencil" class="w-5 h-5 text-blue-600 hover:text-blue-800"></i>';
-        editBtn.addEventListener('click', () => {
-          titleInput.readOnly = false;
-          descInput.readOnly = false;
-          titleInput.focus();
-        });
-        titleInput.addEventListener('blur', () => {
-          titleInput.readOnly = true;
-          db.collection('tasks').doc(doc.id).update({ title: titleInput.value });
-        });
-        descInput.addEventListener('blur', () => {
-          descInput.readOnly = true;
-          db.collection('tasks').doc(doc.id).update({ description: descInput.value });
-        });
-
-        const deleteBtn = document.createElement('button');
-        deleteBtn.innerHTML = '<i data-lucide="trash" class="w-5 h-5 text-red-500 hover:text-red-700"></i>';
-        deleteBtn.addEventListener('click', async () => {
-          await db.collection('tasks').doc(doc.id).delete();
-          loadTasks();
-        });
-
-        if (!data.done) {
-          const completeBtn = document.createElement('button');
-          completeBtn.innerHTML = '<i data-lucide="check-circle" class="w-5 h-5 text-green-500 hover:text-green-700"></i>';
-          completeBtn.title = "Mark as done";
-          completeBtn.addEventListener('click', async () => {
-            await db.collection('tasks').doc(doc.id).update({
-              done: true,
-              completedAt: new Date()
-            });
-            loadTasks();
-          });
-          rightControls.append(completeBtn);
-        }
-
-        rightControls.append(editBtn, deleteBtn);
-        li.append(wrapper, rightControls);
-        data.done ? completedList.appendChild(li) : taskList.appendChild(li);
-      });
-
-      lucide.createIcons();
-    }
+    window.signOutUser = () => signOut(auth);
   </script>
+</head>
+<body>
+  <!-- Auth Section -->
+  <div id="auth-section">
+    <h2>Login or Sign Up</h2>
+    <input type="email" id="email" placeholder="Email" /><br>
+    <input type="password" id="password" placeholder="Password" /><br>
+    <button onclick="signIn()">Sign In</button>
+    <button onclick="signUp()">Sign Up</button>
+  </div>
+
+  <!-- App Section -->
+  <div id="app-section" style="display:none;">
+    <h2>Welcome to JoesQuickNotes</h2>
+    <p>This is your app.</p>
+    <button onclick="signOutUser()">Sign Out</button>
+  </div>
 </body>
 </html>
