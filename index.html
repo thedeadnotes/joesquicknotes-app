@@ -4,18 +4,28 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>HomeTasks</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <style> body { font-family: 'Inter', sans-serif; } </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
-  <div class="min-h-screen flex flex-col items-center p-6">
+
+  <div id="authSection" class="min-h-screen flex flex-col items-center justify-center p-6">
+    <h1 class="text-4xl font-semibold text-gray-900 mb-6">🏠 HomeTasks</h1>
+    <button id="signInBtn" class="bg-indigo-600 text-white px-6 py-3 rounded-xl text-lg hover:bg-indigo-700 transition">
+      Sign in with Google
+    </button>
+  </div>
+
+  <div id="appSection" class="hidden min-h-screen flex flex-col items-center p-6">
     <header class="w-full max-w-3xl mb-10 text-center">
       <h1 class="text-4xl font-semibold text-gray-900">🏠 HomeTasks</h1>
       <p class="text-lg text-gray-600 mt-1">Simple task manager for your home.</p>
+      <button id="signOutBtn" class="mt-4 text-red-600 hover:underline">Sign Out</button>
     </header>
 
     <section class="w-full max-w-3xl bg-white shadow-xl rounded-2xl p-6 mb-8">
@@ -45,6 +55,7 @@
   </div>
 
   <script>
+    // Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyBZ-2lO6sXV9V8qe4u1iP6brci5o-OQOFE",
       authDomain: "joesquicknotes.firebaseapp.com",
@@ -54,9 +65,17 @@
       appId: "1:903482150331:web:609caf78b6fd54e094489e",
       measurementId: "G-J1K97GXPFR"
     };
+
+    // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
     const db = firebase.firestore();
 
+    // DOM elements
+    const authSection = document.getElementById('authSection');
+    const appSection = document.getElementById('appSection');
+    const signInBtn = document.getElementById('signInBtn');
+    const signOutBtn = document.getElementById('signOutBtn');
     const taskTitleInput = document.getElementById('taskTitleInput');
     const taskDescInput = document.getElementById('taskDescInput');
     const addTaskBtn = document.getElementById('addTask');
@@ -66,6 +85,46 @@
     const activeSection = document.getElementById('activeSection');
     const toggleCompleted = document.getElementById('toggleCompleted');
 
+    // Show or hide UI based on auth state
+    function updateUI(user) {
+      if (user) {
+        authSection.classList.add('hidden');
+        appSection.classList.remove('hidden');
+        loadTasks();
+      } else {
+        authSection.classList.remove('hidden');
+        appSection.classList.add('hidden');
+      }
+    }
+
+    // Sign in with redirect
+    signInBtn.addEventListener('click', () => {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithRedirect(provider);
+    });
+
+    // Sign out
+    signOutBtn.addEventListener('click', () => {
+      auth.signOut();
+    });
+
+    // Handle redirect result after sign-in
+    auth.getRedirectResult()
+      .then((result) => {
+        if (result.user) {
+          updateUI(result.user);
+        }
+      })
+      .catch((error) => {
+        console.error("Sign-in redirect error:", error);
+      });
+
+    // Listen for auth state changes
+    auth.onAuthStateChanged(user => {
+      updateUI(user);
+    });
+
+    // Toggle completed tasks visibility
     toggleCompleted.addEventListener('click', () => {
       const showingCompleted = completedSection.classList.contains('hidden');
       completedSection.classList.toggle('hidden');
@@ -73,6 +132,7 @@
       toggleCompleted.innerText = showingCompleted ? 'View Active Tasks' : 'View Completed Tasks';
     });
 
+    // Add task
     addTaskBtn.addEventListener('click', async () => {
       const title = taskTitleInput.value.trim();
       const description = taskDescInput.value.trim();
@@ -88,6 +148,7 @@
       loadTasks();
     });
 
+    // Load tasks from Firestore
     async function loadTasks() {
       taskList.innerHTML = '';
       completedList.innerHTML = '';
@@ -173,8 +234,6 @@
 
       lucide.createIcons();
     }
-
-    loadTasks();
   </script>
 </body>
 </html>
