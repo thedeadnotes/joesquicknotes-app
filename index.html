@@ -3,83 +3,130 @@
 <head>
   <meta charset="UTF-8">
   <title>JoesQuickNotes</title>
-  <script type="module">
-    // Import Firebase
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import {
-      getAuth,
-      onAuthStateChanged,
-      createUserWithEmailAndPassword,
-      signInWithEmailAndPassword,
-      signOut
-    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      padding: 2em;
+      max-width: 600px;
+      margin: auto;
+    }
+    #note-form, #notes, #sign-out {
+      display: none;
+    }
+    .note {
+      background: #f0f0f0;
+      padding: 0.5em;
+      margin-top: 0.5em;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Welcome to JoesQuickNotes</h1>
 
-    // Your Firebase config
+  <div id="auth-section">
+    <button id="google-signin">Sign in with Google</button>
+    <form id="email-form">
+      <input type="email" id="email" placeholder="Email" required />
+      <input type="password" id="password" placeholder="Password" required />
+      <button type="submit">Sign in with Email</button>
+    </form>
+  </div>
+
+  <button id="sign-out">Sign Out</button>
+
+  <form id="note-form">
+    <textarea id="note-input" placeholder="Write your note..." rows="3" style="width: 100%;"></textarea>
+    <button type="submit">Save Note</button>
+  </form>
+
+  <div id="notes"></div>
+
+  <script>
     const firebaseConfig = {
       apiKey: "AIzaSyCQ48aLOvbPkfCXuoyWtZBUPtvDLefT4Dg",
       authDomain: "joesquicknotes.firebaseapp.com",
       projectId: "joesquicknotes",
-      storageBucket: "joesquicknotes.firebasestorage.app",
+      storageBucket: "joesquicknotes.appspot.com",
       messagingSenderId: "903482150331",
       appId: "1:903482150331:web:609caf78b6fd54e094489e",
       measurementId: "G-J1K97GXPFR"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.firestore();
 
-    // Show/hide UI based on login state
-    onAuthStateChanged(auth, user => {
+    const authSection = document.getElementById("auth-section");
+    const googleBtn = document.getElementById("google-signin");
+    const emailForm = document.getElementById("email-form");
+    const noteForm = document.getElementById("note-form");
+    const noteInput = document.getElementById("note-input");
+    const notesDiv = document.getElementById("notes");
+    const signOutBtn = document.getElementById("sign-out");
+
+    googleBtn.onclick = () => {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithRedirect(provider);
+    };
+
+    emailForm.onsubmit = (e) => {
+      e.preventDefault();
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      auth.signInWithEmailAndPassword(email, password)
+        .catch(error => {
+          if (error.code === 'auth/user-not-found') {
+            auth.createUserWithEmailAndPassword(email, password);
+          } else {
+            alert(error.message);
+          }
+        });
+    };
+
+    signOutBtn.onclick = () => auth.signOut();
+
+    auth.onAuthStateChanged(user => {
       if (user) {
-        document.getElementById("auth-section").style.display = "none";
-        document.getElementById("app-section").style.display = "block";
+        authSection.style.display = "none";
+        signOutBtn.style.display = "block";
+        noteForm.style.display = "block";
+        notesDiv.style.display = "block";
+
+        noteForm.onsubmit = async (e) => {
+          e.preventDefault();
+          const text = noteInput.value.trim();
+          if (text) {
+            await db.collection("users").doc(user.uid).collection("notes").add({
+              text,
+              createdAt: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            noteInput.value = "";
+          }
+        };
+
+        db.collection("users").doc(user.uid).collection("notes").orderBy("createdAt", "desc")
+          .onSnapshot(snapshot => {
+            notesDiv.innerHTML = "";
+            snapshot.forEach(doc => {
+              const note = doc.data();
+              const div = document.createElement("div");
+              div.className = "note";
+              div.textContent = note.text;
+              notesDiv.appendChild(div);
+            });
+          });
+
       } else {
-        document.getElementById("auth-section").style.display = "block";
-        document.getElementById("app-section").style.display = "none";
+        authSection.style.display = "block";
+        signOutBtn.style.display = "none";
+        noteForm.style.display = "none";
+        notesDiv.style.display = "none";
       }
     });
-
-    // Sign up
-    window.signUp = async () => {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      try {
-        await createUserWithEmailAndPassword(auth, email, password);
-      } catch (error) {
-        alert(error.message);
-      }
-    };
-
-    // Sign in
-    window.signIn = async () => {
-      const email = document.getElementById("email").value;
-      const password = document.getElementById("password").value;
-      try {
-        await signInWithEmailAndPassword(auth, email, password);
-      } catch (error) {
-        alert(error.message);
-      }
-    };
-
-    // Sign out
-    window.signOutUser = () => signOut(auth);
   </script>
-</head>
-<body>
-  <!-- Auth Section -->
-  <div id="auth-section">
-    <h2>Login or Sign Up</h2>
-    <input type="email" id="email" placeholder="Email" /><br>
-    <input type="password" id="password" placeholder="Password" /><br>
-    <button onclick="signIn()">Sign In</button>
-    <button onclick="signUp()">Sign Up</button>
-  </div>
-
-  <!-- App Section -->
-  <div id="app-section" style="display:none;">
-    <h2>Welcome to JoesQuickNotes</h2>
-    <p>This is your app.</p>
-    <button onclick="signOutUser()">Sign Out</button>
-  </div>
 </body>
 </html>
