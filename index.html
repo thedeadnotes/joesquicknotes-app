@@ -45,8 +45,9 @@
   </div>
 
   <script>
+    // Firebase configuration - MAKE SURE THIS IS YOUR ACTUAL KEY
     const firebaseConfig = {
-      apiKey: "AIzaSyAddn3_6GWdQ8oeQl2-H1MfKyHrwUVh70Y",
+      apiKey: "AIzaSyAddn3_6GWdQ8oeQl2-H1MfKyHrwUVh70Y", // Replace with your actual API Key
       authDomain: "joesquicknotes.firebaseapp.com",
       projectId: "joesquicknotes",
       storageBucket: "joesquicknotes.firebasestorage.app",
@@ -57,6 +58,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
+    // DOM elements
     const taskTitleInput = document.getElementById('taskTitleInput');
     const taskDescInput = document.getElementById('taskDescInput');
     const addTaskBtn = document.getElementById('addTask');
@@ -66,6 +68,18 @@
     const activeSection = document.getElementById('activeSection');
     const toggleCompleted = document.getElementById('toggleCompleted');
 
+    // Function to replace URLs with clickable links
+    function makeLinksClickable(text) {
+      // Regular expression to find URLs (http, https, www)
+      const urlRegex = /(https?:\/\/[^\s]+)|(www\.[^\s]+)/g;
+      return text.replace(urlRegex, (url) => {
+        // Add http:// if it's a www. link without protocol
+        const fullUrl = url.startsWith('www.') ? `http://${url}` : url;
+        return `<a href="${fullUrl}" target="_blank" rel="noopener noreferrer" class="text-blue-500 hover:underline">${url}</a>`;
+      });
+    }
+
+    // Toggle completed tasks visibility
     toggleCompleted.addEventListener('click', () => {
       const showingCompleted = completedSection.classList.contains('hidden');
       completedSection.classList.toggle('hidden');
@@ -73,25 +87,30 @@
       toggleCompleted.innerText = showingCompleted ? 'View Active Tasks' : 'View Completed Tasks';
     });
 
+    // Add task
     addTaskBtn.addEventListener('click', async () => {
       const title = taskTitleInput.value.trim();
       const description = taskDescInput.value.trim();
-      if (!title || title.length > 20) return;
+      if (!title || title.length > 20) return; // Basic validation
+      
+      // Store plain text description in Firestore
       await db.collection('tasks').add({
         title,
-        description,
+        description, // Store as plain text
         createdAt: new Date(),
         done: false
       });
       taskTitleInput.value = '';
       taskDescInput.value = '';
-      loadTasks();
+      loadTasks(); // Reload tasks to display the new one
     });
 
+    // Load tasks from Firestore
     async function loadTasks() {
       taskList.innerHTML = '';
       completedList.innerHTML = '';
 
+      // Get tasks, ordered by creation date
       const snapshot = await db.collection('tasks').orderBy('createdAt', 'desc').get();
 
       snapshot.forEach(doc => {
@@ -102,17 +121,24 @@
         const wrapper = document.createElement('div');
         wrapper.className = 'flex-grow';
 
+        // Title display (always an input, even when read-only)
         const titleInput = document.createElement('input');
         titleInput.type = 'text';
         titleInput.value = data.title;
         titleInput.className = 'text-lg font-semibold w-full bg-transparent focus:outline-none';
         titleInput.readOnly = true;
 
-        const descInput = document.createElement('textarea');
-        descInput.value = data.description || '';
-        descInput.rows = 3;
-        descInput.className = 'text-sm text-gray-600 w-full bg-transparent focus:outline-none resize-none mt-1';
-        descInput.readOnly = true;
+        // Description display - initially a DIV for clickable links
+        const descDisplay = document.createElement('div');
+        descDisplay.className = 'text-sm text-gray-600 w-full resize-none mt-1 whitespace-pre-wrap';
+        // Use makeLinksClickable for display
+        descDisplay.innerHTML = makeLinksClickable(data.description || ''); 
+
+        // Editable textarea for when editing is active
+        const descEditInput = document.createElement('textarea');
+        descEditInput.value = data.description || '';
+        descEditInput.rows = 3;
+        descEditInput.className = 'text-sm text-gray-600 w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none hidden'; // Hidden by default
 
         const timeInfo = document.createElement('p');
         timeInfo.className = 'text-sm text-gray-400 mt-1';
@@ -124,7 +150,7 @@
           timeInfo.innerText = `Created on ${date}`;
         }
 
-        wrapper.append(titleInput, descInput, timeInfo);
+        wrapper.append(titleInput, descDisplay, descEditInput, timeInfo); // Add both display and edit elements
 
         const rightControls = document.createElement('div');
         rightControls.className = 'flex flex-row gap-2 ml-4';
@@ -132,24 +158,53 @@
         const editBtn = document.createElement('button');
         editBtn.innerHTML = '<i data-lucide="pencil" class="w-5 h-5 text-blue-600 hover:text-blue-800"></i>';
         editBtn.addEventListener('click', () => {
-          titleInput.readOnly = false;
-          descInput.readOnly = false;
-          titleInput.focus();
+          // Toggle between display and edit modes
+          const isEditing = !titleInput.readOnly;
+          if (isEditing) {
+            // If currently editing, save changes
+            titleInput.readOnly = true;
+            descEditInput.classList.add('hidden'); // Hide textarea
+            descDisplay.classList.remove('hidden'); // Show div
+            descDisplay.innerHTML = makeLinksClickable(descEditInput.value); // Update display div
+            db.collection('tasks').doc(doc.id).update({
+              title: titleInput.value,
+              description: descEditInput.value // Save the plain text from textarea
+            });
+          } else {
+            // If not editing, switch to edit mode
+            titleInput.readOnly = false;
+            descEditInput.classList.remove('hidden'); // Show textarea
+            descDisplay.classList.add('hidden'); // Hide div
+            descEditInput.focus();
+          }
         });
+        
+        // Save on blur for title and description
         titleInput.addEventListener('blur', () => {
-          titleInput.readOnly = true;
-          db.collection('tasks').doc(doc.id).update({ title: titleInput.value });
+          // Only save if not currently in full edit mode (e.g., if descEditInput is hidden)
+          if (descEditInput.classList.contains('hidden')) { 
+            titleInput.readOnly = true;
+            db.collection('tasks').doc(doc.id).update({ title: titleInput.value });
+          }
         });
-        descInput.addEventListener('blur', () => {
-          descInput.readOnly = true;
-          db.collection('tasks').doc(doc.id).update({ description: descInput.value });
+        descEditInput.addEventListener('blur', () => {
+          // This blur handler is for when the textarea is visible and being edited
+          // When the edit button is clicked again, it will also trigger a save.
+          // This ensures saving if user just clicks away from the textarea
+          if (!descEditInput.classList.contains('hidden')) { // Only save if textarea was active
+            descEditInput.classList.add('hidden'); // Hide textarea
+            descDisplay.classList.remove('hidden'); // Show div
+            descDisplay.innerHTML = makeLinksClickable(descEditInput.value); // Update display div
+            db.collection('tasks').doc(doc.id).update({ description: descEditInput.value });
+          }
         });
+
 
         const deleteBtn = document.createElement('button');
         deleteBtn.innerHTML = '<i data-lucide="trash" class="w-5 h-5 text-red-500 hover:text-red-700"></i>';
         deleteBtn.addEventListener('click', async () => {
           await db.collection('tasks').doc(doc.id).delete();
-          loadTasks();
+          loadTasks(); // Reload tasks after deletion
         });
 
         if (!data.done) {
@@ -161,19 +216,23 @@
               done: true,
               completedAt: new Date()
             });
-            loadTasks();
+            loadTasks(); // Reload tasks after marking as done
           });
           rightControls.append(completeBtn);
         }
 
         rightControls.append(editBtn, deleteBtn);
         li.append(wrapper, rightControls);
+        
+        // Append to appropriate list based on 'done' status
         data.done ? completedList.appendChild(li) : taskList.appendChild(li);
       });
 
+      // Initialize Lucide icons after DOM manipulation
       lucide.createIcons();
     }
 
+    // Load tasks when the page first loads
     loadTasks();
   </script>
 </body>
