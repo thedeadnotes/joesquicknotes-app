@@ -2,57 +2,84 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>HomeTasks</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>HomeTasks — Household Task Manager</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet" />
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <style> body { font-family: 'Inter', sans-serif; } </style>
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+  </style>
 </head>
 <body class="bg-gray-100 text-gray-800">
   <div class="min-h-screen flex flex-col items-center p-6">
+
+    <!-- Header -->
     <header class="w-full max-w-3xl mb-10 text-center">
       <h1 class="text-4xl font-semibold text-gray-900">🏠 HomeTasks</h1>
       <p class="text-lg text-gray-600 mt-1">Simple task manager for your home.</p>
     </header>
 
+    <!-- Task Input -->
     <section class="w-full max-w-3xl bg-white shadow-xl rounded-2xl p-6 mb-8">
       <div class="flex flex-col gap-4">
-        <input type="text" id="taskTitleInput" maxlength="20" placeholder="Task title (max 20 characters)..." class="border border-gray-300 rounded-xl px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"/>
-        <textarea id="taskDescInput" placeholder="Task description..." rows="4" class="border border-gray-300 rounded-xl px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"></textarea>
-        <button id="addTask" class="self-start bg-indigo-600 text-white px-6 py-3 rounded-xl text-lg hover:bg-indigo-700 transition">Add</button>
+        <input
+          type="text"
+          id="taskTitleInput"
+          placeholder="Task title..."
+          class="border border-gray-300 rounded-xl px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+        <input
+          type="text"
+          id="taskDescInput"
+          placeholder="Task description..."
+          class="border border-gray-300 rounded-xl px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        />
+        <button
+          id="addTask"
+          class="self-start bg-indigo-600 text-white px-6 py-3 rounded-xl text-lg hover:bg-indigo-700 transition"
+        >
+          Add
+        </button>
       </div>
     </section>
 
+    <!-- Buttons -->
     <div class="mb-4">
-      <button id="toggleCompleted" class="text-indigo-600 hover:underline">View Completed Tasks</button>
+      <button id="toggleCompleted" class="text-indigo-600 hover:underline">
+        View Completed Tasks
+      </button>
     </div>
 
+    <!-- Task List -->
     <section class="w-full max-w-3xl">
-      <div id="activeSection">
-        <h2 class="text-xl font-semibold mb-2">Active Tasks</h2>
-        <ul id="taskList" class="space-y-4"></ul>
-      </div>
-      <div id="completedSection" class="hidden">
-        <h2 class="text-xl font-semibold mb-2">Completed Tasks</h2>
+      <h2 class="text-xl font-semibold mb-2 text-center">Active Tasks</h2>
+      <ul id="taskList" class="space-y-4"></ul>
+      <div id="completedSection" class="hidden mt-10">
+        <h2 class="text-xl font-semibold mb-2 text-center">Completed Tasks</h2>
         <ul id="completedList" class="space-y-4"></ul>
       </div>
     </section>
 
-    <footer class="mt-12 text-sm text-gray-400 text-center">Built with ☕ and TailwindCSS</footer>
+    <!-- Footer -->
+    <footer class="mt-12 text-sm text-gray-400 text-center">
+      Built with ☕ and TailwindCSS
+    </footer>
   </div>
 
   <script>
     const firebaseConfig = {
-      apiKey: "AIzaSyBZ-2lO6sXV9V8qe4u1iP6brci5o-OQOFE",
+      apiKey: "AIzaSyAddn3_6GWdQ8oeQl2-H1MfKyHrwUVh70Y",
       authDomain: "joesquicknotes.firebaseapp.com",
       projectId: "joesquicknotes",
       storageBucket: "joesquicknotes.firebasestorage.app",
       messagingSenderId: "903482150331",
       appId: "1:903482150331:web:609caf78b6fd54e094489e",
-      measurementId: "G-J1K97GXPFR"
+      measurementId: "G-J1K97GXPFR",
     };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
@@ -63,25 +90,21 @@
     const taskList = document.getElementById('taskList');
     const completedList = document.getElementById('completedList');
     const completedSection = document.getElementById('completedSection');
-    const activeSection = document.getElementById('activeSection');
     const toggleCompleted = document.getElementById('toggleCompleted');
 
     toggleCompleted.addEventListener('click', () => {
-      const showingCompleted = completedSection.classList.contains('hidden');
       completedSection.classList.toggle('hidden');
-      activeSection.classList.toggle('hidden');
-      toggleCompleted.innerText = showingCompleted ? 'View Active Tasks' : 'View Completed Tasks';
     });
 
     addTaskBtn.addEventListener('click', async () => {
       const title = taskTitleInput.value.trim();
       const description = taskDescInput.value.trim();
-      if (!title || title.length > 20) return;
+      if (!title) return;
       await db.collection('tasks').add({
         title,
         description,
         createdAt: new Date(),
-        done: false
+        done: false,
       });
       taskTitleInput.value = '';
       taskDescInput.value = '';
@@ -89,15 +112,17 @@
     });
 
     async function loadTasks() {
+      console.log('Loading tasks...');
       taskList.innerHTML = '';
       completedList.innerHTML = '';
 
       const snapshot = await db.collection('tasks').orderBy('createdAt', 'desc').get();
+      console.log('Tasks found:', snapshot.docs.length);
 
-      snapshot.forEach(doc => {
+      snapshot.forEach((doc) => {
         const data = doc.data();
         const li = document.createElement('li');
-        li.className = 'flex justify-between items-start bg-white p-4 rounded-xl shadow-sm';
+        li.className = 'flex justify-between items-center bg-white p-4 rounded-xl shadow-sm';
 
         const wrapper = document.createElement('div');
         wrapper.className = 'flex-grow';
@@ -108,29 +133,50 @@
         titleInput.className = 'text-lg font-semibold w-full bg-transparent focus:outline-none';
         titleInput.readOnly = true;
 
-        const descInput = document.createElement('textarea');
+        const descInput = document.createElement('input');
+        descInput.type = 'text';
         descInput.value = data.description || '';
-        descInput.rows = 3;
-        descInput.className = 'text-sm text-gray-600 w-full bg-transparent focus:outline-none resize-none mt-1';
+        descInput.className = 'text-sm text-gray-600 w-full bg-transparent focus:outline-none';
         descInput.readOnly = true;
 
         const timeInfo = document.createElement('p');
         timeInfo.className = 'text-sm text-gray-400 mt-1';
         if (data.done) {
-          const date = data.completedAt?.toDate().toLocaleString() || '';
-          timeInfo.innerText = Completed on ${date};
-        } else {
-          const date = data.createdAt?.toDate().toLocaleString() || '';
-          timeInfo.innerText = Created on ${date};
+          const date = data.completedAt?.toDate?.()?.toLocaleString() || '';
+          timeInfo.innerText = `Completed on ${date}`;
         }
 
-        wrapper.append(titleInput, descInput, timeInfo);
+        wrapper.append(titleInput, descInput);
+        if (data.done) wrapper.appendChild(timeInfo);
 
         const rightControls = document.createElement('div');
-        rightControls.className = 'flex flex-row gap-2 ml-4';
+        rightControls.className = 'flex items-center space-x-4';
+
+        if (!data.done) {
+          const checkbox = document.createElement('input');
+          checkbox.type = 'checkbox';
+          checkbox.className = 'h-5 w-5 cursor-pointer';
+          checkbox.addEventListener('change', async () => {
+            if (checkbox.checked) {
+              await db.collection('tasks').doc(doc.id).update({
+                done: true,
+                completedAt: new Date(),
+              });
+              loadTasks();
+            }
+          });
+          rightControls.appendChild(checkbox);
+        } else {
+          const spacer = document.createElement('div');
+          spacer.style.width = '20px';
+          rightControls.appendChild(spacer);
+        }
 
         const editBtn = document.createElement('button');
-        editBtn.innerHTML = '<i data-lucide="pencil" class="w-5 h-5 text-blue-600 hover:text-blue-800"></i>';
+        const editIcon = lucide.createIcon('Edit', {
+          class: 'h-6 w-6 text-blue-600 hover:text-blue-800 cursor-pointer',
+        });
+        editBtn.appendChild(editIcon);
         editBtn.addEventListener('click', () => {
           titleInput.readOnly = false;
           descInput.readOnly = false;
@@ -146,37 +192,37 @@
         });
 
         const deleteBtn = document.createElement('button');
-        deleteBtn.innerHTML = '<i data-lucide="trash" class="w-5 h-5 text-red-500 hover:text-red-700"></i>';
+        const deleteIcon = lucide.createIcon('Trash2', {
+          class: 'h-6 w-6 text-red-500 hover:text-red-700 cursor-pointer',
+        });
+        deleteBtn.appendChild(deleteIcon);
         deleteBtn.addEventListener('click', async () => {
           await db.collection('tasks').doc(doc.id).delete();
           loadTasks();
         });
 
-        if (!data.done) {
-          const completeBtn = document.createElement('button');
-          completeBtn.innerHTML = '<i data-lucide="check-circle" class="w-5 h-5 text-green-500 hover:text-green-700"></i>';
-          completeBtn.title = "Mark as done";
-          completeBtn.addEventListener('click', async () => {
-            await db.collection('tasks').doc(doc.id).update({
-              done: true,
-              completedAt: new Date()
-            });
-            loadTasks();
-          });
-          rightControls.append(completeBtn);
-        }
-
         rightControls.append(editBtn, deleteBtn);
+
         li.append(wrapper, rightControls);
+
         data.done ? completedList.appendChild(li) : taskList.appendChild(li);
       });
 
-      lucide.createIcons();
+      if (!taskList.hasChildNodes()) {
+        const emptyActive = document.createElement('p');
+        emptyActive.className = 'font-bold text-center text-gray-500 mt-4';
+        emptyActive.textContent = 'No active tasks.';
+        taskList.appendChild(emptyActive);
+      }
+      if (!completedList.hasChildNodes()) {
+        const emptyCompleted = document.createElement('p');
+        emptyCompleted.className = 'font-bold text-center text-gray-500 mt-4';
+        emptyCompleted.textContent = 'No completed tasks.';
+        completedList.appendChild(emptyCompleted);
+      }
     }
 
     loadTasks();
   </script>
 </body>
 </html>
-
-
